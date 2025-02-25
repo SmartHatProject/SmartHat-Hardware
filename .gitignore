@@ -1,0 +1,29 @@
+# Arduino
+*.elf
+*.bin
+*.hex
+*.eep
+*.lss
+*.sym
+*.map
+build/
+**/sketch/
+
+# PlatformIO
+.pio/
+.pioenvs/
+.piolibdeps/
+.piolibbuild/
+.piopackages/
+
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.clang-format
+
+# OS
+.DS_Store
+Thumbs.db
