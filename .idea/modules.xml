@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/SmartHat-Hardware.iml" filepath="$PROJECT_DIR$/.idea/SmartHat-Hardware.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/SmartHat_Hardware.iml" filepath="$PROJECT_DIR$/.idea/SmartHat_Hardware.iml" />
     </modules>
   </component>
 </project>
