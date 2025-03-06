@@ -1,6 +1,5 @@
-//this is an example code , + loop to send sensor data as Json
 #include <BluetoothSerial.h>
-#include <ArduinoJSON.h>
+#include <ArduinoJson.h>
 #include "Message.h"
 
 BluetoothSerial SerialBT;
