@@ -1,4 +1,12 @@
-#include <BluetoothSerial.h>
+#include <BluetoothSerial.h> // not for ble
+ // use this instead
+ //  #include <BLEDevice.h>
+ //  #include <BLEServer.h>
+ //  #include <BLEUtils.h>
+//   #include <BLE2902.h>
+
+
+
 #include <ArduinoJson.h>
 #include "Message.h"
 
