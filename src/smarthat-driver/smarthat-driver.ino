@@ -47,7 +47,18 @@ void loop() {
 }
 
 float getDustSensorReading() {
-    // Write dust sensor logic here
+    // Write sound sensor logic here
+    // Read the analog value from the sensor (0-4095)
+    int sensorValue = analogRead(DUST_SENSOR_PIN);
+
+    // Print the sensor value to the Serial Monitor
+    Serial.print("\nSensor Value: ");
+    Serial.println(sensorValue);
+    return 0.0f;
+}
+
+float getSoundSensorReading() {
+   // Write dust sensor logic here
     // Read values from the sensor
     int soundLevel = analogRead(SOUND_ENV_PIN);  // Get volume level (Envelope)
     int soundDetected = digitalRead(SOUND_GATE_PIN);  // Detect loud sound (Gate)
@@ -65,16 +76,7 @@ float getDustSensorReading() {
     Serial.print(dB);
     Serial.print("\n dB | Sound Detected (GATE): ");
     Serial.print(soundDetected);
-    return 0.0f;
+    return dB;
 }
 
-float getSoundSensorReading() {
-    // Write sound sensor logic here
-    // Read the analog value from the sensor (0-4095)
-    int sensorValue = analogRead(DUST_SENSOR_PIN);
 
-    // Print the sensor value to the Serial Monitor
-    Serial.print("\nSensor Value: ");
-    Serial.println(sensorValue);
-    return 0.0f;
-}
