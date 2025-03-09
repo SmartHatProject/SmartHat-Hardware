@@ -1,38 +1,35 @@
 #include "BleHandler.h"
+#include "NoiseSensor.h"
 #include <ArduinoJson.h>
 #include "Message.h"
 
 
 BleHandler bleHandler;
-
-//noise sensor:
-#define SOUND_ENV_PIN 34  // Analog input for sound level
-#define SOUND_GATE_PIN 27 // Digital input for sound detection
-#define BASELINE_NOISE 500  // Baseline noise level (adjust based on quiet room readings)
+//NoiseSensor noiseSensor(sensorPin, loudnessThreshold, numSamples);
+NoiseSensor noiseSensor(34, 1.0, 20);
 
 //dust sensor:
 #define DUST_SENSOR_PIN 35  // ADC1 Channel 7 (GPIO 35) Analog input for dust level
 
 
-
-
-
 float getDustSensorReading();
-float getSoundSensorReading();
 
 void setup() {
     Serial.begin(115200);
     // SerialBT.begin("SmartHat");
     bleHandler.setUpBle();
+    
+    //Init noise sensor
+    noiseSensor.begin();
 
      // Print the characteristic addresses
-    
 
-    pinMode(SOUND_GATE_PIN,INPUT);
     analogReadResolution(12); // Set the resolution to 12 bits (0-4095)
 }
 
 void loop() {
+    // Update the noise sensor readings
+    noiseSensor.update();
 
     Serial.print("Sound Characteristic: ");
     Serial.println((uint32_t)bleHandler.getSoundCharacteristic(), HEX);
@@ -42,7 +39,7 @@ void loop() {
 
     // Collect data periodically
     float dustSensorReading = getDustSensorReading();  // Periodically update this dust reading
-    float soundSensorReading = getSoundSensorReading();
+    float soundSensorReading = noiseSensor.getAverageVoltage();
 
     // Create and send dust sensor data message
     bleHandler.updateDustLevel(dustSensorReading);
@@ -91,26 +88,6 @@ float getDustSensorReading() {
     return 0.0f;
 }
 
-float getSoundSensorReading() {
-   // Write dust sensor logic here
-    // Read values from the sensor
-    int soundLevel = analogRead(SOUND_ENV_PIN);  // Get volume level (Envelope)
-    int soundDetected = digitalRead(SOUND_GATE_PIN);  // Detect loud sound (Gate)
 
-    // Prevent division by zero
-    if (soundLevel <= BASELINE_NOISE) soundLevel = BASELINE_NOISE + 1;
-
-    // Convert to dB using logarithmic scale
-    float dB = 20.0 * log10((float)soundLevel / BASELINE_NOISE);
-
-    // Print values to Serial Monitor
-    Serial.print("\nSound Level (ENV): ");
-    Serial.print(soundLevel);
-    Serial.print("\n | Estimated dB: ");
-    Serial.print(dB);
-    Serial.print("\n dB | Sound Detected (GATE): ");
-    Serial.print(soundDetected);
-    return dB;
-}
 
 
