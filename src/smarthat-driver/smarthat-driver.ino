@@ -77,7 +77,7 @@ void loop() {
     Serial.println(dustValue, 2);
 
     // SerialBT.println();
-    delay(1000);
+    delay(5000);
 }
 
 float getDustSensorReading() {
