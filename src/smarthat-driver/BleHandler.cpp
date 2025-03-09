@@ -16,7 +16,7 @@ void BleHandler::setUpBle() {
     Serial.println("\nStarting BLE work!");
 
     // Initialize the BLE device
-    BLEDevice::init("SMART_HAT");
+    BLEDevice::init("SmartHat");
     pServer = BLEDevice::createServer();
     pService = pServer->createService(SERVICE_UUID);
 
@@ -54,14 +54,20 @@ void BleHandler::setUpBle() {
 
 // Method to update sound level (using a float value)
 void BleHandler::updateSoundLevel(float soundLevel) {
-    pSoundCharacteristic->setValue(reinterpret_cast<uint8_t*>(&soundLevel), sizeof(soundLevel));
-    Serial.println("\nSound Level updated: " + String(soundLevel));
+    char buffer[10];  // Enough for "123.456" + null terminator
+    snprintf(buffer, sizeof(buffer), "%.2f", soundLevel);  // Format as string
+    pSoundCharacteristic->setValue(buffer);
+    pSoundCharacteristic->notify();
+    Serial.println("\nSound Level updated: " + String(buffer));  // Debug print
 }
 
 // Method to update dust level (using a float value)
 void BleHandler::updateDustLevel(float dustLevel) {
-    pDustCharacteristic->setValue(reinterpret_cast<uint8_t*>(&dustLevel), sizeof(dustLevel));
-    Serial.println("\nDust Level updated: " + String(dustLevel));
+    char buffer[10];
+    snprintf(buffer, sizeof(buffer), "%.2f", dustLevel);
+    pDustCharacteristic->setValue(buffer);
+    pDustCharacteristic->notify();
+    Serial.println("\nDust Level updated: " + String(buffer));
 }
 
 // Getter for the BLEServer
