@@ -5,6 +5,7 @@
 
 
 BleHandler bleHandler;
+
 //NoiseSensor noiseSensor(sensorPin, loudnessThreshold, numSamples);
 NoiseSensor noiseSensor(34, 1.0, 20);
 
@@ -74,7 +75,7 @@ void loop() {
     Serial.println(dustValue, 2);
 
     // SerialBT.println();
-    delay(5000);
+    delay(50);
 }
 
 float getDustSensorReading() {
