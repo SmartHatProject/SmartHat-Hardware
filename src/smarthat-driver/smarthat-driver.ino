@@ -12,7 +12,7 @@
 
 //dust sensor:
 #define DUST_SENSOR_PIN 35  // ADC1 Channel 7 (GPIO 35) Analog input for dust level
-
+#define LED_PIN 23  // Digital output pin for dust sensor LED
 
 #include <ArduinoJson.h>
 #include "Message.h"
@@ -26,57 +26,69 @@ void setup() {
     Serial.begin(115200);
     SerialBT.begin("SmartHat");
     pinMode(SOUND_GATE_PIN,INPUT);
+  
+    pinMode(DUST_SENSOR_PIN, INPUT);
+    pinMode(LED_PIN, OUTPUT);
+    digitalWrite(LED_PIN, HIGH); // Power off LED (active low)
     analogReadResolution(12); // Set the resolution to 12 bits (0-4095)
 }
 
 void loop() {
     // Collect data periodically
     float dustSensorReading = getDustSensorReading();  // Periodically update this dust reading
-    float soundSensorReading = getSoundSensorReading();
+    //float soundSensorReading = getSoundSensorReading();
 
     // Create and send dust sensor data message
     Message dustMessage(Message::DUST_DATA_MESSAGE, dustSensorReading);
     serializeJson(dustMessage.getJsonMessage(), SerialBT);
 
     // Create and send sound sensor data message
-    Message soundMessage(Message::SOUND_DATA_MESSAGE, soundSensorReading);
-    serializeJson(soundMessage.getJsonMessage(), SerialBT);
+    // Message soundMessage(Message::SOUND_DATA_MESSAGE, soundSensorReading);
+    // serializeJson(soundMessage.getJsonMessage(), SerialBT);
 
+    delay(500);
     SerialBT.println();
-    delay(1000);
 }
 
+// Got the logic from here: https://www.howmuchsnow.com/arduino/airquality/
 float getDustSensorReading() {
-    // Write sound sensor logic here
-    // Read the analog value from the sensor (0-4095)
-    int sensorValue = analogRead(DUST_SENSOR_PIN);
+  digitalWrite(LED_PIN, LOW); // turn on the LED
+  delayMicroseconds(280); // Use a 280 us sampling time
+  int sensorValue = analogRead(DUST_SENSOR_PIN);
+  delayMicroseconds(40);  // Use a 40us delta time
+  digitalWrite(LED_PIN, HIGH); // turn the LED off
+  delayMicroseconds(9680); // Time between samples
 
-    // Print the sensor value to the Serial Monitor
-    Serial.print("\nSensor Value: ");
-    Serial.println(sensorValue);
-    return 0.0f;
+  float voltage = sensorValue * 5.0f / 4095;
+
+  //float dustDensity = (0.17 * voltage - 0.1) * 1000.0; // In ug/m^3
+
+  // Print the sensor value to the Serial Monitor
+  Serial.print("\nDust Voltage Reading: ");
+  Serial.println(sensorValue);
+  //Serial.print("mg/m^3\n");
+  return voltage;
 }
 
 float getSoundSensorReading() {
-   // Write dust sensor logic here
-    // Read values from the sensor
-    int soundLevel = analogRead(SOUND_ENV_PIN);  // Get volume level (Envelope)
-    int soundDetected = digitalRead(SOUND_GATE_PIN);  // Detect loud sound (Gate)
+  // Read values from the sensor
+  int soundLevel = analogRead(SOUND_ENV_PIN);  // Get volume level (Envelope)
+  int soundDetected = digitalRead(SOUND_GATE_PIN);  // Detect loud sound (Gate)
 
-    // Prevent division by zero
-    if (soundLevel <= BASELINE_NOISE) soundLevel = BASELINE_NOISE + 1;
+  // Prevent division by zero
+  if (soundLevel <= BASELINE_NOISE) soundLevel = BASELINE_NOISE + 1;
 
-    // Convert to dB using logarithmic scale
-    float dB = 20.0 * log10((float)soundLevel / BASELINE_NOISE);
+  // Convert to dB using logarithmic scale
+  float dB = 20.0 * log10((float)soundLevel / BASELINE_NOISE);
 
-    // Print values to Serial Monitor
-    Serial.print("\nSound Level (ENV): ");
-    Serial.print(soundLevel);
-    Serial.print("\n | Estimated dB: ");
-    Serial.print(dB);
-    Serial.print("\n dB | Sound Detected (GATE): ");
-    Serial.print(soundDetected);
-    return dB;
+  // Print values to Serial Monitor
+  Serial.print("\nSound Level (ENV): ");
+  Serial.print(soundLevel);
+  Serial.print("\n | Estimated dB: ");
+  Serial.print(dB);
+  Serial.print("\n dB | Sound Detected (GATE): ");
+  Serial.print(soundDetected);
+  return dB;
 }
 
 
