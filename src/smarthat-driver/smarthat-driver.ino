@@ -1,9 +1,9 @@
-#include <BluetoothSerial.h> // not for ble
- // use this instead
- //  #include <BLEDevice.h>
- //  #include <BLEServer.h>
- //  #include <BLEUtils.h>
-//   #include <BLE2902.h>
+#include "BleHandler.h"
+#include <ArduinoJson.h>
+#include "Message.h"
+
+
+BleHandler bleHandler;
 
 //noise sensor:
 #define SOUND_ENV_PIN 34  // Analog input for sound level
@@ -14,35 +14,69 @@
 #define DUST_SENSOR_PIN 35  // ADC1 Channel 7 (GPIO 35) Analog input for dust level
 
 
-#include <ArduinoJson.h>
-#include "Message.h"
 
-BluetoothSerial SerialBT;
+
 
 float getDustSensorReading();
 float getSoundSensorReading();
 
 void setup() {
     Serial.begin(115200);
-    SerialBT.begin("SmartHat");
+    // SerialBT.begin("SmartHat");
+    bleHandler.setUpBle();
+
+     // Print the characteristic addresses
+    
+
     pinMode(SOUND_GATE_PIN,INPUT);
     analogReadResolution(12); // Set the resolution to 12 bits (0-4095)
 }
 
 void loop() {
+
+    Serial.print("Sound Characteristic: ");
+    Serial.println((uint32_t)bleHandler.getSoundCharacteristic(), HEX);
+
+    Serial.print("Dust Characteristic: ");
+    Serial.println((uint32_t)bleHandler.getDustCharacteristic(), HEX);
+
     // Collect data periodically
     float dustSensorReading = getDustSensorReading();  // Periodically update this dust reading
     float soundSensorReading = getSoundSensorReading();
 
     // Create and send dust sensor data message
+    bleHandler.updateDustLevel(dustSensorReading);
     Message dustMessage(Message::DUST_DATA_MESSAGE, dustSensorReading);
-    serializeJson(dustMessage.getJsonMessage(), SerialBT);
+    // serializeJson(dustMessage.getJsonMessage(), SerialBT);
 
     // Create and send sound sensor data message
+    bleHandler.updateSoundLevel(soundSensorReading);
     Message soundMessage(Message::SOUND_DATA_MESSAGE, soundSensorReading);
-    serializeJson(soundMessage.getJsonMessage(), SerialBT);
+    // serializeJson(soundMessage.getJsonMessage(), SerialBT);
 
-    SerialBT.println();
+    // Read Sound Characteristic
+    String soundRawValue = bleHandler.getSoundCharacteristic()->getValue();
+    float soundValue;
+    if (soundRawValue.length() == sizeof(float)) {
+        memcpy(&soundValue, soundRawValue.c_str(), sizeof(float));
+    } else {
+        soundValue = -1.0f; // Error case
+    }
+
+    String dustRawValue = bleHandler.getDustCharacteristic()->getValue();
+    float dustValue;
+    if (dustRawValue.length() == sizeof(float)) {
+        memcpy(&dustValue, dustRawValue.c_str(), sizeof(float));
+    } else {
+        dustValue = -1.0f; // Error case
+    }
+
+    Serial.print("BLE Sound Value: ");
+    Serial.println(soundValue, 2); // Print with 2 decimal places
+    Serial.print("BLE Dust Value: ");
+    Serial.println(dustValue, 2);
+
+    // SerialBT.println();
     delay(1000);
 }
 
