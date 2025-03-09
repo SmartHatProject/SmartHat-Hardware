@@ -23,7 +23,7 @@ void BleHandler::setUpBle() {
     // Sound Characteristic 
     pSoundCharacteristic = pService->createCharacteristic(
         SOUND_CHARACTERISTIC_UUID,
-        BLECharacteristic::PROPERTY_READ
+        BLECharacteristic::PROPERTY_READ| BLECharacteristic::PROPERTY_NOTIFY
     );
 
     // Set initial sound level (example: 50.0f)
@@ -33,7 +33,7 @@ void BleHandler::setUpBle() {
     // Dust Characteristic (Read Only)
     pDustCharacteristic = pService->createCharacteristic(
         DUST_CHARACTERISTIC_UUID,
-        BLECharacteristic::PROPERTY_READ
+        BLECharacteristic::PROPERTY_READ| BLECharacteristic::PROPERTY_NOTIFY
     );
 
     // Set initial dust level = 0.0
