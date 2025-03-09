@@ -16,7 +16,7 @@ void BleHandler::setUpBle() {
     Serial.println("\nStarting BLE work!");
 
     // Initialize the BLE device
-    BLEDevice::init("SMART_HAT");
+    BLEDevice::init("SmartHat");
     pServer = BLEDevice::createServer();
     pService = pServer->createService(SERVICE_UUID);
 
