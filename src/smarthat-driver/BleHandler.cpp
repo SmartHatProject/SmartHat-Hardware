@@ -2,7 +2,18 @@
 
 #define SERVICE_UUID "12345678-1234-5678-1234-56789abcdef0"
 #define SOUND_CHARACTERISTIC_UUID "abcd1234-5678-1234-5678-abcdef123456"
-#define DUST_CHARACTERISTIC_UUID  "dcba4321-8765-4321-8765-654321fedcba"
+#define DUST_CHARACTERISTIC_UUID  "dcba4321-8765-4321-8765-cted
+
+/*
+* will add a call back class later to see 
+* if device(our app) connected/disconnected
+* needed
+*/
+
+
+
+
+
 
 // Constructor: Initialize pointers
 BleHandler::BleHandler() {
@@ -26,6 +37,7 @@ void BleHandler::setUpBle() {
         BLECharacteristic::PROPERTY_READ| BLECharacteristic::PROPERTY_NOTIFY
     );
 
+
     // Set initial sound level (example: 50.0f)
     float initialSoundLevel = 0.0f;
     pSoundCharacteristic->setValue(reinterpret_cast<uint8_t*>(&initialSoundLevel), sizeof(initialSoundLevel));
@@ -38,10 +50,26 @@ void BleHandler::setUpBle() {
 
     // Set initial dust level = 0.0
     float initialDustLevel = 0.0f;
+ /*
+*use json
+*3 fields format instead of float 0.0f
+*/
+
     pDustCharacteristic->setValue(reinterpret_cast<uint8_t*>(&initialDustLevel), sizeof(initialDustLevel));
 
     // Optional: Add descriptor for client to receive notifications (for Sound level)
     pSoundCharacteristic->addDescriptor(new BLE2902());
+/*
+*when notify
+*also need BLE2902 characteristic
+*to push updates to app
+*init with empty json setValue("{}")
+*/
+pSoundCharacteristic->addDescriptor(new BLE2902());
+
+/*
+*init here
+*/
 
     pService->start();
 
@@ -56,6 +84,19 @@ void BleHandler::setUpBle() {
 void BleHandler::updateSoundLevel(float soundLevel) {
     char buffer[10];  // Enough for "123.456" + null terminator
     snprintf(buffer, sizeof(buffer), "%.2f", soundLevel);  // Format as string
+/*
+*turn into
+*json
+*check at the smarthat_config.md file
+*in this repo (hw)
+* we are using 3 field json format
+*/
+
+
+
+
+
+
     pSoundCharacteristic->setValue(buffer);
     pSoundCharacteristic->notify();
     Serial.println("\nSound Level updated: " + String(buffer));  // Debug print
