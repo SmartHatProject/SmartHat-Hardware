@@ -1,19 +1,15 @@
 #include "BleHandler.h"
 #include "NoiseSensor.h"
+#include "DustSensor.h"
 #include <ArduinoJson.h>
 #include "Message.h"
 
 
 BleHandler bleHandler;
-
 //NoiseSensor noiseSensor(sensorPin, loudnessThreshold, numSamples);
 NoiseSensor noiseSensor(34, 1.0, 20);
-
-//dust sensor:
-#define DUST_SENSOR_PIN 35  // ADC1 Channel 7 (GPIO 35) Analog input for dust level
-
-
-float getDustSensorReading();
+//DustSensor::DustSensor(int ledPin, int sensorPin, float dustThreshold)
+DustSensor dustSensor(23,35,0.5);
 
 void setup() {
     Serial.begin(115200);
@@ -22,8 +18,9 @@ void setup() {
     
     //Init noise sensor
     noiseSensor.begin();
-
-     // Print the characteristic addresses
+    
+     //Init dust sensor
+    dustSensor.begin();
 
     analogReadResolution(12); // Set the resolution to 12 bits (0-4095)
 }
@@ -31,6 +28,7 @@ void setup() {
 void loop() {
     // Update the noise sensor readings
     noiseSensor.update();
+    dustSensor.readSensor();
 
     Serial.print("Sound Characteristic: ");
     Serial.println((uint32_t)bleHandler.getSoundCharacteristic(), HEX);
@@ -38,9 +36,8 @@ void loop() {
     Serial.print("Dust Characteristic: ");
     Serial.println((uint32_t)bleHandler.getDustCharacteristic(), HEX);
 
-    // Collect data periodically
-    float dustSensorReading = getDustSensorReading();  // Periodically update this dust reading
     float soundSensorReading = noiseSensor.getAverageVoltage();
+    float dustSensorReading = dustSensor.getDustDensity();  
 
     // Create and send dust sensor data message
     bleHandler.updateDustLevel(dustSensorReading);
@@ -76,17 +73,6 @@ void loop() {
 
     // SerialBT.println();
     delay(50);
-}
-
-float getDustSensorReading() {
-    // Write sound sensor logic here
-    // Read the analog value from the sensor (0-4095)
-    int sensorValue = analogRead(DUST_SENSOR_PIN);
-
-    // Print the sensor value to the Serial Monitor
-    Serial.print("\nSensor Value: ");
-    Serial.println(sensorValue);
-    return 0.0f;
 }
 
 
