@@ -47,7 +47,11 @@ void BleHandler::setUpBle() {
     );
 
     //set initial value of sound and dust characteristics to empty JSON
-    std::string initialSoundCharacteristicValue = "{}";
+    std::string initialSoundCharacteristicValue = "{}"; // Replace this with th code in the comment below
+    /* TRY:
+    * std::string initialSoundCharacteristicValue = "{\"messageType\":\"SOUND_SENSOR_DATA\",\"data\":0.0,\"timeStamp\":" + String(millis()).c_str() + "}";
+    *SAME for dust
+    */
     pSoundCharacteristic->setValue(initialSoundCharacteristicValue.c_str());
     
     std::string initialDustCharacteristicValue = "{}";
