@@ -1,9 +1,11 @@
-#include "BLEHandler.h"
+#include "BleHandler.h"
 #include "Message.h"
+
 
 #define SERVICE_UUID "12345678-1234-5678-1234-56789abcdef0"
 #define SOUND_CHARACTERISTIC_UUID "abcd1234-5678-1234-5678-abcdef123456"
 #define DUST_CHARACTERISTIC_UUID  "dcba4321-8765-4321-8765-654321fedcba"
+
 
 /*
 * will add a call back class later to see 
@@ -53,7 +55,7 @@ void BleHandler::setUpBle() {
 
     // Optional: Add descriptor for client to receive notifications (for Sound level)
     pSoundCharacteristic->addDescriptor(new BLE2902());
-    pSoundCharacteristic->addDescriptor(new BLE2902());
+    pDustCharacteristic->addDescriptor(new BLE2902());
     /*
     *when notify
     *also need BLE2902 characteristic
@@ -76,7 +78,7 @@ void BleHandler::setUpBle() {
 void BleHandler::updateSoundLevel(float soundLevel) {
 
     //create message from sound sensor and format in JSON
-    Message soundMessage = Message("Sound Sensor ", soundLevel);
+    Message soundMessage = Message(Message::SOUND_DATA_MESSAGE, soundLevel);
     std::string jsonMessage = soundMessage.getJsonMessage();
 
     //set the value of sound characteristic to JSON string so that android app can process
@@ -92,7 +94,7 @@ void BleHandler::updateSoundLevel(float soundLevel) {
 void BleHandler::updateDustLevel(float dustLevel) {
     
     //create message from dust sensor and format in JSON
-    Message dustMessage = Message("Dust Sensor ", dustLevel);
+    Message dustMessage = Message(Message::DUST_DATA_MESSAGE, dustLevel);
     std:: string jsonMessage=dustMessage.getJsonMessage();
 
     //set the vakue of the dust characteristic to the JSON string so that the android app can process it

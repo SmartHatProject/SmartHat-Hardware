@@ -78,7 +78,7 @@ void loop() {
     // Serial.println(dustValue, 2);
 
    
-    delay(50);
+    delay(1000);
 }
 
 float getDustSensorReading() {
@@ -89,7 +89,7 @@ float getDustSensorReading() {
     // Print the sensor value to the Serial Monitor
     Serial.print("\nSensor Value: ");
     Serial.println(sensorValue);
-    return 0.0f;
+    return 7.23f;
 }
 
 
