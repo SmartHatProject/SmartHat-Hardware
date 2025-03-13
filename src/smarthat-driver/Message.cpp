@@ -10,13 +10,20 @@ Message::Message()
 Message::Message(std::string messageType, float data)
         : messageType(messageType), data(data), timeStamp(millis()) {}
 
-
-JsonDocument Message::getJsonMessage() {
+std::string Message::getJsonMessage() {
     StaticJsonDocument<100> jsonMessage;
 
     jsonMessage["messageType"] = this->messageType;
     jsonMessage["data"] = this->data;
     jsonMessage["timeStamp"]= this->timeStamp;
 
-    return jsonMessage;
+    std::string jsonString;
+    serializeJson(jsonMessage, jsonString);
+
+    // Debug output
+    Serial.println( jsonString.c_str()); // Debug
+
+    return jsonString;
+    
+    
 }

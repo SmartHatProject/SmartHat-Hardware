@@ -1,4 +1,5 @@
 #include "BLEHandler.h"
+#include "Message.h"
 
 #define SERVICE_UUID "12345678-1234-5678-1234-56789abcdef0"
 #define SOUND_CHARACTERISTIC_UUID "abcd1234-5678-1234-5678-abcdef123456"
@@ -59,17 +60,17 @@ void BleHandler::setUpBle() {
 
     // Optional: Add descriptor for client to receive notifications (for Sound level)
     pSoundCharacteristic->addDescriptor(new BLE2902());
-/*
-*when notify
-*also need BLE2902 characteristic
-*to push updates to app
-*init with empty json setValue("{}")
-*/
-pSoundCharacteristic->addDescriptor(new BLE2902());
+    /*
+    *when notify
+    *also need BLE2902 characteristic
+    *to push updates to app
+    *init with empty json setValue("{}")
+    */
+    pSoundCharacteristic->addDescriptor(new BLE2902());
 
-/*
-*init here
-*/
+      /*
+      *init here
+    */
 
     pService->start();
 
@@ -84,13 +85,13 @@ pSoundCharacteristic->addDescriptor(new BLE2902());
 void BleHandler::updateSoundLevel(float soundLevel) {
     char buffer[10];  // Enough for "123.456" + null terminator
     snprintf(buffer, sizeof(buffer), "%.2f", soundLevel);  // Format as string
-/*
-*turn into
-*json
-*check at the smarthat_config.md file
-*in this repo (hw)
-* we are using 3 field json format
-*/
+    /*
+    *turn into
+    *json
+    *check at the smarthat_config.md file
+    *in this repo (hw)
+    * we are using 3 field json format
+    */
 
 
 
@@ -104,11 +105,14 @@ void BleHandler::updateSoundLevel(float soundLevel) {
 
 // Method to update dust level (using a float value)
 void BleHandler::updateDustLevel(float dustLevel) {
-    char buffer[10];
-    snprintf(buffer, sizeof(buffer), "%.2f", dustLevel);
-    pDustCharacteristic->setValue(buffer);
+    
+    Message dustMessage = Message("Dust Sensor ", dustLevel);
+    std:: string jsonMessage=dustMessage.getJsonMessage();
+
+
+    pDustCharacteristic->setValue(jsonMessage.c_str());
     pDustCharacteristic->notify();
-    Serial.println("\nDust Level updated: " + String(buffer));
+    // Serial.println("\nDust Level updated: " + String(messageBuffer));
 }
 
 // Getter for the BLEServer
