@@ -32,50 +32,53 @@ void loop() {
     // Update the noise sensor readings
     noiseSensor.update();
 
+    //print sound characteristic pointer for debug
     Serial.print("Sound Characteristic: ");
     Serial.println((uint32_t)bleHandler.getSoundCharacteristic(), HEX);
 
+    //print dust characteristic pointer for debug
     Serial.print("Dust Characteristic: ");
     Serial.println((uint32_t)bleHandler.getDustCharacteristic(), HEX);
 
-    // Collect data periodically
-    float dustSensorReading = getDustSensorReading();  // Periodically update this dust reading
+    // Collect sensor readings
+    float dustSensorReading = getDustSensorReading();  
     float soundSensorReading = noiseSensor.getAverageVoltage();
 
-    // Create and send dust sensor data message
+    // update value of dust characteristic with new sensor reading
     bleHandler.updateDustLevel(dustSensorReading);
-    Message dustMessage(Message::DUST_DATA_MESSAGE, dustSensorReading);
+    // Message dustMessage(Message::DUST_DATA_MESSAGE, dustSensorReading);
     // serializeJson(dustMessage.getJsonMessage(), SerialBT);
 
-    // Create and send sound sensor data message
+    // update value of sound characteristic with new sensor reading
     bleHandler.updateSoundLevel(soundSensorReading);
-    Message soundMessage(Message::SOUND_DATA_MESSAGE, soundSensorReading);
+    // Message soundMessage(Message::SOUND_DATA_MESSAGE, soundSensorReading);
     // serializeJson(soundMessage.getJsonMessage(), SerialBT);
 
-    // Read Sound Characteristic
-    String soundRawValue = bleHandler.getSoundCharacteristic()->getValue();
-    float soundValue;
-    if (soundRawValue.length() == sizeof(float)) {
-        memcpy(&soundValue, soundRawValue.c_str(), sizeof(float));
-    } else {
-        soundValue = -1.0f; // Error case
-    }
 
-    String dustRawValue = bleHandler.getDustCharacteristic()->getValue();
-    float dustValue;
-    if (dustRawValue.length() == sizeof(float)) {
-        memcpy(&dustValue, dustRawValue.c_str(), sizeof(float));
-    } else {
-        dustValue = -1.0f; // Error case
-    }
+    
+    // String soundRawValue = bleHandler.getSoundCharacteristic()->getValue();
+    // float soundValue;
+    // if (soundRawValue.length() == sizeof(float)) {
+    //     memcpy(&soundValue, soundRawValue.c_str(), sizeof(float));
+    // } else {
+    //     soundValue = -1.0f; // Error case
+    // }
 
-    Serial.print("BLE Sound Value: ");
-    Serial.println(soundValue, 2); // Print with 2 decimal places
-    Serial.print("BLE Dust Value: ");
-    Serial.println(dustValue, 2);
+    // String dustRawValue = bleHandler.getDustCharacteristic()->getValue();
+    // float dustValue;
+    // if (dustRawValue.length() == sizeof(float)) {
+    //     memcpy(&dustValue, dustRawValue.c_str(), sizeof(float));
+    // } else {
+    //     dustValue = -1.0f; // Error case
+    // }
 
-    // SerialBT.println();
-    delay(50);
+    // Serial.print("BLE Sound Value: ");
+    // Serial.println(soundValue, 2); // Print with 2 decimal places
+    // Serial.print("BLE Dust Value: ");
+    // Serial.println(dustValue, 2);
+
+   
+    delay(1000);
 }
 
 float getDustSensorReading() {
@@ -86,7 +89,7 @@ float getDustSensorReading() {
     // Print the sensor value to the Serial Monitor
     Serial.print("\nSensor Value: ");
     Serial.println(sensorValue);
-    return 0.0f;
+    return 7.23f;
 }
 
 
