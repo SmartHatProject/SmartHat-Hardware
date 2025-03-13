@@ -3,7 +3,7 @@
 
 #define SERVICE_UUID "12345678-1234-5678-1234-56789abcdef0"
 #define SOUND_CHARACTERISTIC_UUID "abcd1234-5678-1234-5678-abcdef123456"
-#define DUST_CHARACTERISTIC_UUID  "dcba4321-8765-4321-8765-cted
+#define DUST_CHARACTERISTIC_UUID  "dcba4321-8765-4321-8765-654321fedcba"
 
 /*
 * will add a call back class later to see 
@@ -38,39 +38,30 @@ void BleHandler::setUpBle() {
         BLECharacteristic::PROPERTY_READ| BLECharacteristic::PROPERTY_NOTIFY
     );
 
-
-    // Set initial sound level (example: 50.0f)
-    float initialSoundLevel = 0.0f;
-    pSoundCharacteristic->setValue(reinterpret_cast<uint8_t*>(&initialSoundLevel), sizeof(initialSoundLevel));
-
     // Dust Characteristic (Read Only)
     pDustCharacteristic = pService->createCharacteristic(
         DUST_CHARACTERISTIC_UUID,
         BLECharacteristic::PROPERTY_READ| BLECharacteristic::PROPERTY_NOTIFY
     );
 
-    // Set initial dust level = 0.0
-    float initialDustLevel = 0.0f;
- /*
-*use json
-*3 fields format instead of float 0.0f
-*/
-
-    pDustCharacteristic->setValue(reinterpret_cast<uint8_t*>(&initialDustLevel), sizeof(initialDustLevel));
+    //set initial value of sound and dust characteristics to empty JSON
+    std::string initialSoundCharacteristicValue = "{}";
+    pSoundCharacteristic->setValue(initialSoundCharacteristicValue.c_str());
+    
+    std::string initialDustCharacteristicValue = "{}";
+    pDustCharacteristic->setValue(initialDustCharacteristicValue.c_str());
 
     // Optional: Add descriptor for client to receive notifications (for Sound level)
+    pSoundCharacteristic->addDescriptor(new BLE2902());
     pSoundCharacteristic->addDescriptor(new BLE2902());
     /*
     *when notify
     *also need BLE2902 characteristic
     *to push updates to app
-    *init with empty json setValue("{}")
+    *init with empty json setValue("{}")------------ we call the notify function in the update function so no need for that here - Anthony. 
     */
-    pSoundCharacteristic->addDescriptor(new BLE2902());
+    
 
-      /*
-      *init here
-    */
 
     pService->start();
 
@@ -83,36 +74,34 @@ void BleHandler::setUpBle() {
 
 // Method to update sound level (using a float value)
 void BleHandler::updateSoundLevel(float soundLevel) {
-    char buffer[10];  // Enough for "123.456" + null terminator
-    snprintf(buffer, sizeof(buffer), "%.2f", soundLevel);  // Format as string
-    /*
-    *turn into
-    *json
-    *check at the smarthat_config.md file
-    *in this repo (hw)
-    * we are using 3 field json format
-    */
 
+    //create message from sound sensor and format in JSON
+    Message soundMessage = Message("Sound Sensor ", soundLevel);
+    std::string jsonMessage = soundMessage.getJsonMessage();
 
-
-
-
-
-    pSoundCharacteristic->setValue(buffer);
+    //set the value of sound characteristic to JSON string so that android app can process
+    pSoundCharacteristic->setValue(jsonMessage.c_str());
     pSoundCharacteristic->notify();
-    Serial.println("\nSound Level updated: " + String(buffer));  // Debug print
+
+    //print for debug
+    Serial.println("value of sound sensor characteristic sent to app: ");
+    Serial.println(jsonMessage.c_str());  
 }
 
 // Method to update dust level (using a float value)
 void BleHandler::updateDustLevel(float dustLevel) {
     
+    //create message from dust sensor and format in JSON
     Message dustMessage = Message("Dust Sensor ", dustLevel);
     std:: string jsonMessage=dustMessage.getJsonMessage();
 
-
+    //set the vakue of the dust characteristic to the JSON string so that the android app can process it
     pDustCharacteristic->setValue(jsonMessage.c_str());
     pDustCharacteristic->notify();
-    // Serial.println("\nDust Level updated: " + String(messageBuffer));
+
+    //print for debugging purposes
+    Serial.println("value of dust sensor characteristic sent to app: ");
+    Serial.println(jsonMessage.c_str());
 }
 
 // Getter for the BLEServer
