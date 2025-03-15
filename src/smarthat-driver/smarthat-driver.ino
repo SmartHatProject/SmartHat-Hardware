@@ -3,6 +3,13 @@
 #include <ArduinoJson.h>
 #include "Message.h"
 
+/*
+ * for ide errors you might get on arduino if you're seeing errors about missing Arduino.h or 
+ * other header files these are just ide config issues,
+ * not actual problems with the code.Arduino will find these headers 
+ * correctly when compiling for ESP32. 
+ * the code will compile fine 
+ */
 
 BleHandler bleHandler;
 NoiseSensor noiseSensor(34, 1.0, 20);
@@ -82,23 +89,11 @@ void loop() {
             bleHandler.updateDustLevel(testValue);
             bleHandler.updateSoundLevel(testValue);
             
-           
-            if (testCounter % 5 == 0) {
-                Serial.println("\n========== Sending Simplified Format ==========");
-                char simpleJson[100];
-                
-                sprintf(simpleJson, "{\"messageType\":\"SOUND_SENSOR_DATA\",\"data\":%.2f,\"timeStamp\":%lu}", 
-                    testValue, millis());
-                Serial.println("Sound JSON: " + String(simpleJson));
-                bleHandler.getSoundCharacteristic()->setValue(simpleJson);
-                bleHandler.getSoundCharacteristic()->notify();
-                
-                sprintf(simpleJson, "{\"messageType\":\"DUST_SENSOR_DATA\",\"data\":%.2f,\"timeStamp\":%lu}", 
-                    testValue, millis());
-                Serial.println("Dust JSON: " + String(simpleJson));
-                bleHandler.getDustCharacteristic()->setValue(simpleJson);
-                bleHandler.getDustCharacteristic()->notify();
-            }
+            /* 
+             * using only these update methods now there was code 
+             * here that resent same data in JSOn format every 5 seconds, which was redundant
+             * data updates every second instead of occasionally
+             */
         }
     }
     

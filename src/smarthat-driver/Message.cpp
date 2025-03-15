@@ -27,9 +27,17 @@ String Message::getJsonMessage() {
    
     serializeJson(jsonMessage, jsonString);
     
-    // debug output
+    // Enhanced debug output
     Serial.println("Generated JSON:");
+    Serial.print("  Message Type: ");
+    Serial.println(this->messageType);
+    Serial.print("  Data Value: ");
+    Serial.println(this->data);
+    Serial.print("  Timestamp: ");
+    Serial.println(this->timeStamp);
     Serial.println(jsonString);
+    
+    
     
     return jsonString;
 }

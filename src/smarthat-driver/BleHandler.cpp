@@ -54,7 +54,7 @@ BleHandler::BleHandler() {
 void BleHandler::setUpBle() {
     Serial.println("\n=== Starting BLE Setup ===");
 
-    // Initialize the BLE device
+
     BLEDevice::init("SmartHat");
     pServer = BLEDevice::createServer();
     
@@ -75,7 +75,6 @@ void BleHandler::setUpBle() {
         BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY
     );
 
-    //changed from std::string to const char* 
     const char* initialSoundValue = "{\"messageType\":\"SOUND_SENSOR_DATA\",\"data\":1.0,\"timeStamp\":0}";
     
     pSoundCharacteristic->setValue(initialSoundValue);
@@ -112,7 +111,7 @@ void BleHandler::updateSoundLevel(float soundLevel) {
         Message soundMessage = Message(Message::SOUND_SENSOR_DATA, soundLevel);
         String jsonMessage = soundMessage.getJsonMessage();
 
-        //set the value of sound characteristic to JSON string so that android app can process
+        
         pSoundCharacteristic->setValue(jsonMessage.c_str());
         pSoundCharacteristic->notify();
 
@@ -120,15 +119,19 @@ void BleHandler::updateSoundLevel(float soundLevel) {
         Serial.println("\n=== Sound Update ===");
         Serial.println("Value: " + String(soundLevel, 2));
         Serial.println("JSON: " + jsonMessage);
+        Serial.println("Sent notification to connected device");  
     }
 }
 
-
+// Method to update dust level (using a float value)
 void BleHandler::updateDustLevel(float dustLevel) {
+    // Only send updates if a device is connected
     if (deviceConnected) {
         //create message from dust sensor and format in JSON
         Message dustMessage = Message(Message::DUST_SENSOR_DATA, dustLevel);
         String jsonMessage = dustMessage.getJsonMessage();
+
+        //set the value of the dust characteristic to the JSON string so that the android app can process it
         pDustCharacteristic->setValue(jsonMessage.c_str());
         pDustCharacteristic->notify();
 
@@ -136,6 +139,7 @@ void BleHandler::updateDustLevel(float dustLevel) {
         Serial.println("\n=== Dust Update ===");
         Serial.println("Value: " + String(dustLevel, 2));
         Serial.println("JSON: " + jsonMessage);
+        Serial.println("Sent notification to connected device"); 
     }
 }
 
@@ -174,7 +178,6 @@ void BleHandler::setService(BLEService* service) {
     pService = service;
 }
 
-// Setter for the Sound Characteristic
 void BleHandler::setSoundCharacteristic(BLECharacteristic* soundCharacteristic) {
     pSoundCharacteristic = soundCharacteristic;
 }
