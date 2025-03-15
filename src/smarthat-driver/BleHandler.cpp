@@ -75,7 +75,7 @@ void BleHandler::setUpBle() {
         BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY
     );
 
-    // Set initial value with proper JSON format this has to use this format previous one was wrong
+    //changed from std::string to const char* 
     const char* initialSoundValue = "{\"messageType\":\"SOUND_SENSOR_DATA\",\"data\":1.0,\"timeStamp\":0}";
     
     pSoundCharacteristic->setValue(initialSoundValue);
