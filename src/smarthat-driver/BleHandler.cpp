@@ -6,6 +6,24 @@
 #define SOUND_CHARACTERISTIC_UUID "abcd1234-5678-1234-5678-abcdef123456"
 #define DUST_CHARACTERISTIC_UUID  "dcba4321-8765-4321-8765-654321fedcba"
 
+// Characteristic callback implementation
+class CharacteristicCallbacks: public BLECharacteristicCallbacks {
+    void onRead(BLECharacteristic* pCharacteristic) {
+        String uuid = pCharacteristic->getUUID().toString().c_str();
+        Serial.println("Characteristic read: " + uuid);
+    }
+    
+    void onWrite(BLECharacteristic* pCharacteristic) {
+        String uuid = pCharacteristic->getUUID().toString().c_str();
+        Serial.println("Characteristic write: " + uuid);
+        Serial.println("Value: " + String(pCharacteristic->getValue().c_str()));
+    }
+    
+    void onNotify(BLECharacteristic* pCharacteristic) {
+        String uuid = pCharacteristic->getUUID().toString().c_str();
+        Serial.println("Notification sent: " + uuid);
+    }
+};
 
 // ServerCallbacks methods
 ServerCallbacks::ServerCallbacks(bool* connected) : deviceConnected(connected) {}
@@ -57,9 +75,9 @@ void BleHandler::setUpBle() {
     );
 
     // Set initial value with proper JSON format this has to use this format previous one was wrong
-    std::string initialValue = "{\"messageType\":\"SOUND_SENSOR_DATA\",\"data\":1.0,\"timeStamp\":0}";
+    const char* initialSoundValue = "{\"messageType\":\"SOUND_SENSOR_DATA\",\"data\":1.0,\"timeStamp\":0}";
     
-    pSoundCharacteristic->setValue(initialValue);
+    pSoundCharacteristic->setValue(initialSoundValue);
     pDustCharacteristic->setValue("{\"messageType\":\"DUST_SENSOR_DATA\",\"data\":1.0,\"timeStamp\":0}");
 
     // Descriptors
@@ -90,8 +108,8 @@ void BleHandler::updateSoundLevel(float soundLevel) {
     // Only send updates if a device is connected
     if (deviceConnected) {
         //create message from sound sensor and format in JSON
-        Message soundMessage = Message("SOUND_SENSOR_DATA", soundLevel);
-        std::string jsonMessage = soundMessage.getJsonMessage();
+        Message soundMessage = Message(Message::SOUND_SENSOR_DATA, soundLevel);
+        String jsonMessage = soundMessage.getJsonMessage();
 
         //set the value of sound characteristic to JSON string so that android app can process
         pSoundCharacteristic->setValue(jsonMessage.c_str());
@@ -104,15 +122,12 @@ void BleHandler::updateSoundLevel(float soundLevel) {
     }
 }
 
-// Method to update dust level (using a float value)
+
 void BleHandler::updateDustLevel(float dustLevel) {
-    // Only send updates if a device is connected
     if (deviceConnected) {
         //create message from dust sensor and format in JSON
-        Message dustMessage = Message("DUST_SENSOR_DATA", dustLevel);
-        std::string jsonMessage = dustMessage.getJsonMessage();
-
-        //set the vakue of the dust characteristic to the JSON string so that the android app can process it
+        Message dustMessage = Message(Message::DUST_SENSOR_DATA, dustLevel);
+        String jsonMessage = dustMessage.getJsonMessage();
         pDustCharacteristic->setValue(jsonMessage.c_str());
         pDustCharacteristic->notify();
 
@@ -167,24 +182,5 @@ void BleHandler::setSoundCharacteristic(BLECharacteristic* soundCharacteristic) 
 void BleHandler::setDustCharacteristic(BLECharacteristic* dustCharacteristic) {
     pDustCharacteristic = dustCharacteristic;
 }
-
-// Characteristic callback implementation
-class CharacteristicCallbacks: public BLECharacteristicCallbacks {
-    void onRead(BLECharacteristic* pCharacteristic) {
-        String uuid = pCharacteristic->getUUID().toString().c_str();
-        Serial.println("Characteristic read: " + uuid);
-    }
-    
-    void onWrite(BLECharacteristic* pCharacteristic) {
-        String uuid = pCharacteristic->getUUID().toString().c_str();
-        Serial.println("Characteristic write: " + uuid);
-        Serial.println("Value: " + String(pCharacteristic->getValue().c_str()));
-    }
-    
-    void onNotify(BLECharacteristic* pCharacteristic) {
-        String uuid = pCharacteristic->getUUID().toString().c_str();
-        Serial.println("Notification sent: " + uuid);
-    }
-};
 
 
