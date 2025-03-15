@@ -1,6 +1,5 @@
 #include "NoiseSensor.h"
 
-// Constructor
 NoiseSensor::NoiseSensor(int sensorPin, float loudnessThreshold, int numSamples)
     : _sensorPin(sensorPin), _loudnessThreshold(loudnessThreshold), _numSamples(numSamples),
       _currentVoltage(0.0), _averageVoltage(0.0), _exposureStartTime(0), _isAlertActive(false) {
@@ -8,73 +7,70 @@ NoiseSensor::NoiseSensor(int sensorPin, float loudnessThreshold, int numSamples)
     _sampleIndex = 0;
 }
 
-// Initialize the sensor
+NoiseSensor::~NoiseSensor() {
+//free memoty
+    if (_samples != nullptr) {
+        delete[] _samples;
+        _samples = nullptr;
+    }
+}
+
+
 void NoiseSensor::begin() {
-    // Initialize serial communication
     Serial.begin(115200);
-
-    // Configure the analog input pin
-    analogReadResolution(12);  // Set ADC resolution to 12 bits
-
-    // Initialize the samples array
+    analogReadResolution(12);  
     for (int i = 0; i < _numSamples; i++) {
         _samples[i] = 0.0;
     }
 }
 
-// Main loop function to be called repeatedly
 void NoiseSensor::update() {
-    // Read the sensor and calculate voltage
+    static unsigned long lastUpdateTime = 0;
+    unsigned long currentTime = millis();
+ 
+    if (currentTime - lastUpdateTime < 100) {
+        return; 
+    }
+    lastUpdateTime = currentTime;
+   
     _currentVoltage = readSensor();
 
-    // Add the voltage to the samples array
     _samples[_sampleIndex] = _currentVoltage;
-    _sampleIndex = (_sampleIndex + 1) % _numSamples;  // Wrap around the array
+    _sampleIndex = (_sampleIndex + 1) % _numSamples;  
 
-    // Calculate the average voltage over the last 2 seconds (20 samples × 100ms)
     _averageVoltage = calculateAverageVoltage();
 
-    // Debug: Print average voltage
     Serial.print("Average Voltage: ");
     Serial.println(_averageVoltage, 3);
 
-    // Check if the average voltage exceeds the loudness threshold
     if (_averageVoltage >= _loudnessThreshold) {
-        // Start or continue exposure timer
+      
         if (_exposureStartTime == 0) {
-            _exposureStartTime = millis();  // Start the timer
+            _exposureStartTime = millis(); 
             Serial.println("Loud noise detected. Exposure timer started.");
         }
 
-        // Calculate elapsed time
-        unsigned long elapsedTime = (millis() - _exposureStartTime) / 1000;  // Convert to seconds
+        unsigned long elapsedTime = (millis() - _exposureStartTime) / 1000;  
 
-        // Debugging: Print elapsed time
         Serial.print("Elapsed Time: ");
         Serial.print(elapsedTime);
         Serial.println(" s");
-
-        // Trigger an alert if the exposure time exceeds 10 seconds
         if (elapsedTime >= 4) {
             triggerAlert();
-            _exposureStartTime = 0;  // Reset the timer
+            _exposureStartTime = 0; 
         }
     } else {
-        // Reset the timer if the noise level drops below the threshold
         if (_exposureStartTime != 0) {
-            _exposureStartTime = 0;  // Reset the timer
+            _exposureStartTime = 0; 
             Serial.println("Noise level dropped. Exposure timer reset.");
         }
     }
-
-    // Wait for 100ms before the next reading (20 samples × 100ms = 2-second window)
-    delay(100);
+  
 }
 
-// Read the sensor and calculate voltage
 float NoiseSensor::readSensor() {
     int sensorValue = analogRead(_sensorPin);
-    float voltage = (sensorValue / 4095.0) * 5.0;  // 5V supply
+    float voltage = (sensorValue / 4095.0) * 5.0;  //5v
 
     Serial.print("Raw Sensor Value: ");
     Serial.print(sensorValue);
@@ -84,7 +80,6 @@ float NoiseSensor::readSensor() {
     return voltage;
 }
 
-// Calculate the average voltage
 float NoiseSensor::calculateAverageVoltage() {
     float avgVoltage = 0.0;
     for (int i = 0; i < _numSamples; i++) {
