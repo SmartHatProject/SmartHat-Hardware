@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+// changed std::string to const char
 
 class Message {
     public:
