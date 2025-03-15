@@ -90,7 +90,7 @@ void BleHandler::updateSoundLevel(float soundLevel) {
     pSoundCharacteristic->notify();
 
     //print for debug
-    Serial.println("value of sound sensor characteristic sent to app: ");
+    Serial.println("\nvalue of sound sensor characteristic sent to app: ");
     Serial.println(jsonMessage.c_str());  
 }
 
@@ -106,7 +106,7 @@ void BleHandler::updateDustLevel(float dustLevel) {
     pDustCharacteristic->notify();
 
     //print for debugging purposes
-    Serial.println("value of dust sensor characteristic sent to app: ");
+    Serial.println("\nvalue of dust sensor characteristic sent to app: ");
     Serial.println(jsonMessage.c_str());
 }
 

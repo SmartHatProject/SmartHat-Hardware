@@ -63,7 +63,7 @@ void NoiseSensor::update() {
         // Reset the timer if the noise level drops below the threshold
         if (_exposureStartTime != 0) {
             _exposureStartTime = 0;  // Reset the timer
-            Serial.println("Noise level dropped. Exposure timer reset.");
+            Serial.println("\nNoise level dropped. Exposure timer reset.");
         }
     }
 

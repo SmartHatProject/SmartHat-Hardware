@@ -1,5 +1,6 @@
 #include "BleHandler.h"
 #include "NoiseSensor.h"
+#include "DustSensor.h"
 #include <ArduinoJson.h>
 #include "Message.h"
 
@@ -9,11 +10,8 @@ BleHandler bleHandler;
 //NoiseSensor noiseSensor(sensorPin, loudnessThreshold, numSamples);
 NoiseSensor noiseSensor(34, 1.0, 20);
 
-//dust sensor:
-#define DUST_SENSOR_PIN 35  // ADC1 Channel 7 (GPIO 35) Analog input for dust level
-
-
-float getDustSensorReading();
+//DustSensor dustSensor(SENSOR_PIN, LED_PIN, ADC_MAX, VCC)
+DustSensor dustSensor(35,23,4095,3.3);
 
 void setup() {
     Serial.begin(115200);
@@ -22,6 +20,9 @@ void setup() {
     
     //Init noise sensor
     noiseSensor.begin();
+
+    //init dust sensir
+    dustSensor.setUpDustSensor();
 
      // Print the characteristic addresses
 
@@ -33,63 +34,26 @@ void loop() {
     noiseSensor.update();
 
     //print sound characteristic pointer for debug
-    Serial.print("Sound Characteristic: ");
+    Serial.print("\nSound Characteristic: ");
     Serial.println((uint32_t)bleHandler.getSoundCharacteristic(), HEX);
 
     //print dust characteristic pointer for debug
-    Serial.print("Dust Characteristic: ");
+    Serial.print("\nDust Characteristic: ");
     Serial.println((uint32_t)bleHandler.getDustCharacteristic(), HEX);
 
     // Collect sensor readings
-    float dustSensorReading = getDustSensorReading();  
+    float dustSensorReading = dustSensor.readDustSensor();  
     float soundSensorReading = noiseSensor.getAverageVoltage();
 
     // update value of dust characteristic with new sensor reading
     bleHandler.updateDustLevel(dustSensorReading);
-    // Message dustMessage(Message::DUST_DATA_MESSAGE, dustSensorReading);
-    // serializeJson(dustMessage.getJsonMessage(), SerialBT);
-
+    
     // update value of sound characteristic with new sensor reading
     bleHandler.updateSoundLevel(soundSensorReading);
-    // Message soundMessage(Message::SOUND_DATA_MESSAGE, soundSensorReading);
-    // serializeJson(soundMessage.getJsonMessage(), SerialBT);
-
-
     
-    // String soundRawValue = bleHandler.getSoundCharacteristic()->getValue();
-    // float soundValue;
-    // if (soundRawValue.length() == sizeof(float)) {
-    //     memcpy(&soundValue, soundRawValue.c_str(), sizeof(float));
-    // } else {
-    //     soundValue = -1.0f; // Error case
-    // }
-
-    // String dustRawValue = bleHandler.getDustCharacteristic()->getValue();
-    // float dustValue;
-    // if (dustRawValue.length() == sizeof(float)) {
-    //     memcpy(&dustValue, dustRawValue.c_str(), sizeof(float));
-    // } else {
-    //     dustValue = -1.0f; // Error case
-    // }
-
-    // Serial.print("BLE Sound Value: ");
-    // Serial.println(soundValue, 2); // Print with 2 decimal places
-    // Serial.print("BLE Dust Value: ");
-    // Serial.println(dustValue, 2);
 
    
     delay(1000);
-}
-
-float getDustSensorReading() {
-    // Write sound sensor logic here
-    // Read the analog value from the sensor (0-4095)
-    int sensorValue = analogRead(DUST_SENSOR_PIN);
-
-    // Print the sensor value to the Serial Monitor
-    Serial.print("\nSensor Value: ");
-    Serial.println(sensorValue);
-    return 7.23f;
 }
 
 
