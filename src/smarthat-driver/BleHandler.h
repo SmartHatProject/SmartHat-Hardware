@@ -7,7 +7,9 @@
 #include <BLEServer.h>
 #include <BLE2902.h>
 
-// Connection callback class
+class ServerCallbacks;
+class CharacteristicCallbacks;
+
 class ServerCallbacks: public BLEServerCallbacks {
   private:
     bool* deviceConnected;
@@ -26,13 +28,11 @@ class BleHandler {
     bool deviceConnected;
   
   public:
-    // Constructor
+  
     BleHandler();
 
-    // BLE Setup
     void setUpBle();
 
-    // Methods to update sensor values
     void updateSoundLevel(float soundLevel);
     void updateDustLevel(float dustLevel);
 
