@@ -9,6 +9,8 @@ Message::Message()
 
 Message::Message(const char* messageType, float data)
         : messageType(messageType), data(data), timeStamp(millis()) {}
+//  from std::string to string 
+// also removedg verification steps
 
 String Message::getJsonMessage() {
     
