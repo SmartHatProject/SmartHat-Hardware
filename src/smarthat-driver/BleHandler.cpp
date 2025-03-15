@@ -6,7 +6,8 @@
 #define SOUND_CHARACTERISTIC_UUID "abcd1234-5678-1234-5678-abcdef123456"
 #define DUST_CHARACTERISTIC_UUID  "dcba4321-8765-4321-8765-654321fedcba"
 
-// Characteristic callback implementation
+// moved CharacteristicCallbacks class definition to top 
+// class was being used before its definition,
 class CharacteristicCallbacks: public BLECharacteristicCallbacks {
     void onRead(BLECharacteristic* pCharacteristic) {
         String uuid = pCharacteristic->getUUID().toString().c_str();
