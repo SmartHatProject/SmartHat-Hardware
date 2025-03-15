@@ -7,6 +7,8 @@
 #include <BLEServer.h>
 #include <BLE2902.h>
 
+// added forward declarations 
+// class declared before referenced 
 class ServerCallbacks;
 class CharacteristicCallbacks;
 
