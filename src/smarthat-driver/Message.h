@@ -26,6 +26,9 @@ class Message {
         const char* messageType;
         const float data;
         const unsigned long timeStamp;
+        
+        // Helper method to create fallback JSON with default values
+        String createFallbackJson();
 };
 
 #endif //SMARTHAT_HARDWARE_MESSAGE_H

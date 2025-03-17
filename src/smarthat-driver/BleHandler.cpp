@@ -1,10 +1,14 @@
 #include "BleHandler.h"
 #include "Message.h"
+#include "DustSensor.h"
+
+
 
 //UUIDS
 #define SERVICE_UUID "12345678-1234-5678-1234-56789abcdef0"
 #define SOUND_CHARACTERISTIC_UUID "abcd1234-5678-1234-5678-abcdef123456"
 #define DUST_CHARACTERISTIC_UUID  "dcba4321-8765-4321-8765-654321fedcba"
+#define MAX_MTU_SIZE 512 
 
 // moved CharacteristicCallbacks class definition to top 
 // class was being used before its definition,
@@ -29,15 +33,34 @@ class CharacteristicCallbacks: public BLECharacteristicCallbacks {
 // ServerCallbacks methods
 ServerCallbacks::ServerCallbacks(bool* connected) : deviceConnected(connected) {}
 
+/*
+ * Connection Callback
+ * mtu negotiation
+ * default too small
+ * 
+ * 
+ */
 void ServerCallbacks::onConnect(BLEServer* pServer) {
     *deviceConnected = true;
     Serial.println("\n=== BLE CLIENT CONNECTED ===");
+    
+    // request larger mtu size for efficient data transfer
+    uint16_t mtu = pServer->getPeerMTU(pServer->getConnId());
+    Serial.print("Default MTU: "); 
+    Serial.println(mtu);
+    
+    // updatePeerMTU returns void  can't check if it succeeded
+    pServer->updatePeerMTU(pServer->getConnId(), MAX_MTU_SIZE);
+    Serial.print("Requested larger MTU: ");
+    Serial.println(MAX_MTU_SIZE);
+    
     Serial.println("Waiting for client to enable notifications...");
 }
 
 void ServerCallbacks::onDisconnect(BLEServer* pServer) {
     *deviceConnected = false;
     Serial.println("\n=== BLE CLIENT DISCONNECTED ===");
+    // Restart advertising to allow new connections
     BLEDevice::startAdvertising();
     Serial.println("Started advertising again");
 }
@@ -51,129 +74,252 @@ BleHandler::BleHandler() {
     deviceConnected = false;
 }
 
+
 void BleHandler::setUpBle() {
     Serial.println("\n=== Starting BLE Setup ===");
 
-
+    // Initialize the BLE device
     BLEDevice::init("SmartHat");
-    pServer = BLEDevice::createServer();
     
-    //connection callbacks
+    // Create server with error checking
+    pServer = BLEDevice::createServer();
+    if (pServer == nullptr) {
+        Serial.println("ERROR: Failed to create BLE server");
+        return;
+    }
+    
+    // Set connection callbacks
     pServer->setCallbacks(new ServerCallbacks(&deviceConnected));
     
+    // Create service with error checking
     pService = pServer->createService(BLEUUID(SERVICE_UUID));
+    if (pService == nullptr) {
+        Serial.println("ERROR: Failed to create BLE service");
+        return;
+    }
 
     // Sound Characteristic 
     pSoundCharacteristic = pService->createCharacteristic(
         BLEUUID(SOUND_CHARACTERISTIC_UUID),
         BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY
     );
+    
+    // Check if sound characteristic creation was successful
+    if (pSoundCharacteristic == nullptr) {
+        Serial.println("ERROR: Failed to create sound characteristic");
+        return;
+    }
 
-    // Dust Characteristic (Read Only)
+    // Dust Characteristic
     pDustCharacteristic = pService->createCharacteristic(
         BLEUUID(DUST_CHARACTERISTIC_UUID),
         BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY
     );
-
-    const char* initialSoundValue = "{\"messageType\":\"SOUND_SENSOR_DATA\",\"data\":1.0,\"timeStamp\":0}";
     
-    pSoundCharacteristic->setValue(initialSoundValue);
-    pDustCharacteristic->setValue("{\"messageType\":\"DUST_SENSOR_DATA\",\"data\":1.0,\"timeStamp\":0}");
+    // Check if dust characteristic creation was successful
+    if (pDustCharacteristic == nullptr) {
+        Serial.println("ERROR: Failed to create dust characteristic");
+        return;
+    }
 
-    // Descriptors
-    pSoundCharacteristic->addDescriptor(new BLE2902());
-    pDustCharacteristic->addDescriptor(new BLE2902());
-
-    // callbacks for debugging
-    pSoundCharacteristic->setCallbacks(new CharacteristicCallbacks());
-    pDustCharacteristic->setCallbacks(new CharacteristicCallbacks());
-    pService->start();
+    
+    Message initialSoundMessage = Message(Message::SOUND_SENSOR_DATA, 40.0f); // Default to 40 dB (quiet room)
+    Message initialDustMessage = Message(Message::DUST_SENSOR_DATA, 10.0f);  // Default to 10 µg/m³ (clean air)
+    
+    String soundJson = initialSoundMessage.getJsonMessage();
+    String dustJson = initialDustMessage.getJsonMessage();
+    
+    // Set initial values 
+    if (soundJson.length() > 0) {
+        pSoundCharacteristic->setValue(soundJson.c_str());
+        Serial.println("Set initial sound characteristic value");
+    } else {
+        // Fallback if JSON creation fails
+        const char* fallbackJson = "{\"messageType\":\"SOUND_SENSOR_DATA\",\"data\":40.0,\"timeStamp\":0}";
+        pSoundCharacteristic->setValue(fallbackJson);
+        Serial.println("Set fallback sound characteristic value");
+    }
+    
+    if (dustJson.length() > 0) {
+        pDustCharacteristic->setValue(dustJson.c_str());
+        Serial.println("Set initial dust characteristic value");
+    } else {
+        // Fallback if JSON creation fails
+        const char* fallbackJson = "{\"messageType\":\"DUST_SENSOR_DATA\",\"data\":10.0,\"timeStamp\":0}";
+        pDustCharacteristic->setValue(fallbackJson);
+        Serial.println("Set fallback dust characteristic value");
+    }
 
    
-    // Set up advertising with the service UUID
+    // sound sensor
+    BLE2902* soundDescriptor = new BLE2902();
+    if (soundDescriptor == nullptr) {
+        Serial.println("ERROR: Failed to create sound descriptor");
+        return;
+    }
+    
+    soundDescriptor->setNotifications(true);
+    bool soundDescriptorAdded = true;
+    try {
+        pSoundCharacteristic->addDescriptor(soundDescriptor);
+    } catch (...) {
+        soundDescriptorAdded = false;
+        Serial.println("ERROR: Exception while adding sound descriptor");
+    }
+    
+    if (!soundDescriptorAdded) {
+        Serial.println("ERROR: Failed to add sound descriptor");
+        delete soundDescriptor;
+    }
+    
+    // dust sensor
+    BLE2902* dustDescriptor = new BLE2902();
+    if (dustDescriptor == nullptr) {
+        Serial.println("ERROR: Failed to create dust descriptor");
+        return;
+    }
+    
+    dustDescriptor->setNotifications(true);
+    bool dustDescriptorAdded = true;
+    try {
+        pDustCharacteristic->addDescriptor(dustDescriptor);
+    } catch (...) {
+        dustDescriptorAdded = false;
+        Serial.println("ERROR: Exception while adding dust descriptor");
+    }
+    
+    if (!dustDescriptorAdded) {
+        Serial.println("ERROR: Failed to add dust descriptor");
+        delete dustDescriptor; // Prevent memory leak
+        return;
+    }
+
+    // Set callbacks 
+    pSoundCharacteristic->setCallbacks(new CharacteristicCallbacks());
+    pDustCharacteristic->setCallbacks(new CharacteristicCallbacks());
+    
+    // Start the service 
+    pService->start();
+    Serial.println("BLE service started");
+
+    /*
+     * enhanced advertising
+     * 
+     * advertising parameters 
+     *
+     */
     BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
     pAdvertising->addServiceUUID(SERVICE_UUID);
     pAdvertising->setScanResponse(true);
+    
+   
+    try {
+      
+        pAdvertising->setMinPreferred(0x12);   
+    } catch (...) {
+        Serial.println("WARNING: Could not set preferred connection parameters - library may not support it");
+    }
+    
     BLEDevice::startAdvertising();
 
     Serial.println("\n=== BLE Setup Complete ===");
+    Serial.println("Device Name: SmartHat");
     Serial.println("Service UUID: " + String(SERVICE_UUID));
     Serial.println("Sound Characteristic UUID: " + String(SOUND_CHARACTERISTIC_UUID));
     Serial.println("Dust Characteristic UUID: " + String(DUST_CHARACTERISTIC_UUID));
     Serial.println("Waiting for connections...");
 }
 
-// Method to update sound level (using a float value)
+
 void BleHandler::updateSoundLevel(float soundLevel) {
-    // Only send updates if a device is connected
+    
     if (deviceConnected) {
-        //create message from sound sensor and format in JSON
+       
         Message soundMessage = Message(Message::SOUND_SENSOR_DATA, soundLevel);
         String jsonMessage = soundMessage.getJsonMessage();
 
-        
-        pSoundCharacteristic->setValue(jsonMessage.c_str());
-        pSoundCharacteristic->notify();
-
-        //print for debug
         Serial.println("\n=== Sound Update ===");
-        Serial.println("Value: " + String(soundLevel, 2));
-        Serial.println("JSON: " + jsonMessage);
-        Serial.println("Sent notification to connected device");  
+        Serial.print("Raw Value: "); 
+        Serial.println(soundLevel, 2);
+        Serial.print("JSON to send: "); 
+        Serial.println(jsonMessage);
+        
+    
+        if (jsonMessage.length() == 0) {
+            Serial.println("ERROR: Empty JSON message for sound data");
+            return;
+        }
+        
+        // Set the value 
+        pSoundCharacteristic->setValue(jsonMessage.c_str());
+        Serial.println("Set sound characteristic value");
+        
+        // Send notification 
+        pSoundCharacteristic->notify();
+        Serial.println("Sound notification sent");
     }
 }
 
-// Method to update dust level (using a float value)
+
 void BleHandler::updateDustLevel(float dustLevel) {
-    // Only send updates if a device is connected
+    
     if (deviceConnected) {
         //create message from dust sensor and format in JSON
         Message dustMessage = Message(Message::DUST_SENSOR_DATA, dustLevel);
         String jsonMessage = dustMessage.getJsonMessage();
 
-        //set the value of the dust characteristic to the JSON string so that the android app can process it
-        pDustCharacteristic->setValue(jsonMessage.c_str());
-        pDustCharacteristic->notify();
-
-        //print for debugging purposes
         Serial.println("\n=== Dust Update ===");
-        Serial.println("Value: " + String(dustLevel, 2));
-        Serial.println("JSON: " + jsonMessage);
-        Serial.println("Sent notification to connected device"); 
+        Serial.print("Raw Value: "); 
+        Serial.println(dustLevel, 2);
+        Serial.print("JSON to send: ");
+        Serial.println(jsonMessage);
+        
+        // Check if the JSON message is valid
+        if (jsonMessage.length() == 0) {
+            Serial.println("ERROR: Empty JSON message for dust data");
+            return;
+        }
+        
+        // Set the value 
+        pDustCharacteristic->setValue(jsonMessage.c_str());
+        Serial.println("Set dust characteristic value");
+        
+        // Send notification 
+        pDustCharacteristic->notify();
+        Serial.println("Dust notification sent");
     }
 }
 
-// Getter for the BLEServer
+
 BLEServer* BleHandler::getServer() {
     return pServer;
 }
 
-// Getter for the BLEService
+
 BLEService* BleHandler::getService() {
     return pService;
 }
 
-// Getter for the Sound Characteristic
+
 BLECharacteristic* BleHandler::getSoundCharacteristic() {
     return pSoundCharacteristic;
 }
 
-// Getter for the Dust Characteristic
+
 BLECharacteristic* BleHandler::getDustCharacteristic() {
     return pDustCharacteristic;
 }
 
-// Get connection status
+
 bool BleHandler::isDeviceConnected() {
     return deviceConnected;
 }
 
-// Setter for the BLEServer
 void BleHandler::setServer(BLEServer* server) {
     pServer = server;
 }
 
-// Setter for the BLEService
+
 void BleHandler::setService(BLEService* service) {
     pService = service;
 }
@@ -182,7 +328,7 @@ void BleHandler::setSoundCharacteristic(BLECharacteristic* soundCharacteristic) 
     pSoundCharacteristic = soundCharacteristic;
 }
 
-// Setter for the Dust Characteristic
+
 void BleHandler::setDustCharacteristic(BLECharacteristic* dustCharacteristic) {
     pDustCharacteristic = dustCharacteristic;
 }

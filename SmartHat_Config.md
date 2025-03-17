@@ -1,51 +1,140 @@
-# SmartHat ble config
+# SmartHat BLE Configuration
 
 ## Device Info
-Device Name: SmartHat
-Service UUID: 12345678-1234-5678-1234-56789abcdef0
+- name: SmartHat
+- service UUID: 12345678-1234-5678-1234-56789abcdef0
 
 ## Characteristics
-1. Sound Sensor:
+
+### Sound Sensor
    - UUID: abcd1234-5678-1234-5678-abcdef123456
-   - Properties: READ, NOTIFY
-   - Data Format: JSON string
-   - {"messageType":"SOUND_SENSOR_DATA","data":45.5,"timeStamp":1234567890}
+- properties: read, notify
+- format: JSON string
+- range: 30-130 dB
+- initial value: 40.0 dB (quiet room)
+- example: `{"messageType":"SOUND_SENSOR_DATA","data":45.5,"timeStamp":1234567890}`
 
-2. Dust Sensor:
+### Dust Sensor
    - UUID: dcba4321-8765-4321-8765-654321fedcba
-   - Properties: READ, NOTIFY
-   - Data Format: JSON string
-   -  {"messageType":"DUST_SENSOR_DATA","data":25.5,"timeStamp":1234567890}
+- properties: read, notify
+- format: JSON string
+- range: 0-1000 micrograms/m³
+- initial value: 10.0 micrograms/m³ (clean air)
+- example: `{"messageType":"DUST_SENSOR_DATA","data":25.5,"timeStamp":1234567890}`
 
-## Data Format
-- JSON with 3 fields:
-  - messageType: String identifying the sensor ("SOUND_SENSOR_DATA" or "DUST_SENSOR_DATA")
-  - data: float value of the sensor reading
-  - timeStamp: Long integer Unix timestamp in ms
+## JSON Format
+- messageType: "SOUND_SENSOR_DATA" or "DUST_SENSOR_DATA"
+- data: float value in dB or micrograms/m³
+- timeStamp: milliseconds since device boot
 
 ## Alert Thresholds
-- Dust: > 50.0  alert
-- Sound: > 85.0  alert
+- dust: >50.0 micrograms/m³ (immediate alert)
+- sound: >85.0 dB sustained for 4+ seconds
 
-## Implementation Notes
-1. ESP32:
-   - Provides BLE with service and characteristics sound and dust
-   - Updates characteristics 
-   - Sends notifications 
-   - Handles connect/disconnect 
-   - JSON formats same
+## Update Frequency
+- readings update every ~1 second
+- notifications sent when connected
+- initial values sent immediately on connection
+- auto-resume on reconnection
 
-2. Android:
-   - Scans for device named "SmartHat"
-   - Connects to service UUID
-   - Subscribes to notifications for both characteristics
-   - Parses JSON data for display and alerts
+## Notification Implementation
 
-## Compatibility HW/APP
-- Device name matches
-- Service and characteristic UUIDs match
-- JSON data format 
-- NOTIFY property implemented
-- Connection handling 
--Treasholds consiAtent 
+### Enabling Notifications
+- write value 0x0100 to descriptor UUID 0x2902 (CCCD) on each characteristic
+- sequence: discover services → get characteristics → write to descriptor → register callback
+- re-enable notifications after any reconnection
+- both characteristics must have notifications enabled separately
+
+### Connection Parameters
+- recommended interval: 15-30ms
+- slave latency: 0
+- supervision timeout: 500ms
+- MTU: request 512 bytes after connection established
+- connection priority: high (for Android implementation)
+
+### Handling Notifications
+- expect notifications approximately every 1 second when connected
+- process in order received (use timestamp for verification)
+- implement queue if processing is slower than receipt rate
+- handle potential out-of-order timestamps
+- be prepared for initial values immediately after connection
+
+### Error Recovery
+- if no notifications within 5 seconds: verify subscription, reconnect if needed
+- if malformed JSON: log error, maintain last valid value
+- if connection drops: automatically reconnect and re-enable notifications
+- implement exponential backoff for reconnection attempts
+
+## ESP32 Implementation
+- multiple readings averaged for stability
+- raw values converted to standard units
+- JSON validation with fallback values
+- MTU request: 512 bytes
+- detailed logging for troubleshooting
+
+## Android Implementation
+- scan for "SmartHat" device
+- connect to service UUID
+- subscribe to notifications
+- parse JSON for display and alerts
+- request maximum MTU after connection
+
+## Sensor Details
+
+### Dust Sensor
+- IR LED control: active-low
+- sampling window: 280µs
+- formula: ((voltage - 0.6) / 0.5) * 100.0 = micrograms/m³
+- clean air threshold: 0.6V
+- 5 readings averaged
+
+### Sound Sensor
+- formula: 20.0 * log10(voltage / 0.01) + 40.0 = dB
+- 5 readings averaged
+- range clamped: 30.0-130.0 dB
+- alert after 4 seconds above threshold
+
+## Error Handling
+- JSON validation with fallbacks
+- out-of-range values logged with warnings
+- invalid readings filtered during averaging
+- voltage range filter: 0.001-3.3V
+- default values: 30.0 dB (sound), 0.0 micrograms/m³ (dust)
+
+## Fallback Behavior
+- JSON creation failure → valid JSON with defaults
+- invalid sound readings → 30.0 dB
+- dust voltage below 0.6V → 0.0 micrograms/m³ (clean air)
+- non-zero initial values prevent "zero value" display
+
+## Compatibility
+- exact device name and UUID matching
+- consistent JSON structure
+- notify property for realtime updates
+- matching alert thresholds
+- valid value ranges
+- robust connection handling
+
+## Hardware Notification Implementation
+
+### CCCD Setup
+```cpp
+// CCCD setup
+BLE2902* descriptor = new BLE2902();
+descriptor->setNotifications(true);
+characteristic->addDescriptor(descriptor);
+```
+
+### Notification Sending
+```cpp
+// Update characteristic value and send notification
+characteristic->setValue(jsonString.c_str());
+characteristic->notify();
+```
+
+
+updates / fixes/ random notes
+
+
+
 
