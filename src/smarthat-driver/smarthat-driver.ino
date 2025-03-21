@@ -7,6 +7,19 @@
 #define DUST_ALERT_THRESHOLD 50.0
 #define SOUND_ALERT_THRESHOLD 85.0
 
+//dust sensor constants
+#define DUST_SENSOR_PIN 35
+#define DUST_LED_PIN 23
+#define DUST_ADC_MAX 4095
+#define DUST_VCC 3.3
+
+//noise sensor constants
+#define NOISE_SENSOR_PIN 34
+#define NOISE_CALIBRATION_DB 57.0
+#define NOISE_PEAK_REF 373
+#define NOISE_AVG_REF 363
+
+
 bool lastConnectionStatus = false;
 unsigned long lastUpdateTime = 0;
 const unsigned long UPDATE_INTERVAL = 1000; 
@@ -15,10 +28,10 @@ const unsigned long UPDATE_INTERVAL = 1000;
 BleHandler bleHandler;
 
 //NoiseSensor noiseSensor(sensorPin, loudnessThreshold, numSamples);
-NoiseSensor noiseSensor(34, 1.0, 20);
+NoiseSensor noiseSensor(NOISE_SENSOR_PIN, NOISE_CALIBRATION_DB, NOISE_PEAK_REF, NOISE_AVG_REF);
 
 //DustSensor dustSensor(SENSOR_PIN, LED_PIN, ADC_MAX, VCC)
-DustSensor dustSensor(35,23,4095,3.3);
+DustSensor dustSensor(DUST_SENSOR_PIN, DUST_LED_PIN, DUST_ADC_MAX, DUST_VCC);
 
 void setup() {
     Serial.begin(115200);
@@ -53,7 +66,7 @@ void loop() {
     }
     lastConnectionStatus = currentConnectionStatus;
 
-    noiseSensor.update();
+    
 
     //update BLE characteristics if it's been more than 1000 ms and the SmartHat is connected to a client
     unsigned long currentTime = millis();
@@ -61,16 +74,15 @@ void loop() {
 
       lastUpdateTime = currentTime;
 
-      if(currentConnectionStatus){
-        // Collect sensor readings
-        float dustSensorReading = dustSensor.readDustSensor();  
-        float soundSensorReading = noiseSensor.getAverageVoltage();
+      if(currentConnectionStatus){  
 
         // update value of dust characteristic with new sensor reading
+        float dustSensorReading = dustSensor.readDustSensor();
         bleHandler.updateDustLevel(dustSensorReading);
     
         // update value of sound characteristic with new sensor reading
-        bleHandler.updateSoundLevel(soundSensorReading);
+        noiseSensor.update();
+        bleHandler.updateSoundLevel(noiseSensor.getPeakDB());
       }
     
     }
