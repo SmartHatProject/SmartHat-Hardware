@@ -7,7 +7,11 @@
 #include <BLEServer.h>
 #include <BLE2902.h>
 
-// Connection callback class
+// added forward declarations 
+// class declared before referenced 
+class ServerCallbacks;
+class CharacteristicCallbacks;
+
 class ServerCallbacks: public BLEServerCallbacks {
   private:
     bool* deviceConnected;
@@ -16,6 +20,7 @@ class ServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer);
     void onDisconnect(BLEServer* pServer);
 };
+
 
 class BleHandler {
   private:
