@@ -60,7 +60,7 @@ std:: string Message::getJsonMessage() {
             }
         } else if (messageType == GAS_DATA_MESSAGE) {
             // CO2 gas levels typically range from 0 to 1000 ppm
-            if (data < 0.0f || data > 1000.0f) {
+            if (data < 0.0f || data > 5000.0f) {
                 Serial.print("WARNING: Gas value out of typical range: ");
                 Serial.println(data);
                 // Still include the value but log a warning
