@@ -1,8 +1,9 @@
 #include "BleHandler.h"
 #include "NoiseSensor.h"
 #include "DustSensor.h"
-#include "MQ135Sensor.h"
+#include "GasSensor.h"
 #include <ArduinoJson.h>
+#include <Math.h>
 #include "Message.h"
 
 #define DUST_ALERT_THRESHOLD 50.0
