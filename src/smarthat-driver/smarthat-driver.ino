@@ -23,9 +23,8 @@
 
 //gas sensor constants
 #define GAS_SENSOR_PIN 32
-#define DUST_LED_PIN 23
-#define DUST_ADC_MAX 4095
-#define DUST_VCC 3.3
+#define GAS_LOAD_RESISTANCE 10.0
+#define GAS_NUM_SAMPLES 100
 
 
 bool lastConnectionStatus = false;
@@ -37,6 +36,9 @@ BleHandler bleHandler;
 
 //NoiseSensor noiseSensor(sensorPin, loudnessThreshold, numSamples);
 NoiseSensor noiseSensor(NOISE_SENSOR_PIN, NOISE_CALIBRATION_DB, NOISE_PEAK_REF, NOISE_AVG_REF);
+
+//GasSensor gasSensor(sensorPin,load resistance, numSamples);
+GasSensor gasSensor(GAS_SENSOR_PIN, GAS_LOAD_RESISTANCE, GAS_NUM_SAMPLES);
 
 //DustSensor dustSensor(SENSOR_PIN, LED_PIN, ADC_MAX, VCC)
 DustSensor dustSensor(DUST_SENSOR_PIN, DUST_LED_PIN, DUST_ADC_MAX, DUST_VCC);
@@ -50,6 +52,9 @@ void setup() {
     
     //Init noise sensor
     noiseSensor.begin();
+
+    //Init noise sensor
+    gasSensor.begin();
 
     //init dust sensir
     dustSensor.setUpDustSensor();
