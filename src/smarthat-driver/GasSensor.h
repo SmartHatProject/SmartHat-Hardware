@@ -1,9 +1,11 @@
 #ifndef GASSENSOR_H
 #define GASSENSOR_H
 
-class MQ135Sensor {
+#include <Arduino.h>
+
+class GasSensor {
 public:
-    MQ135Sensor(int pin, float loadResistance, int numSamples);
+    GasSensor(int pin, float loadResistance, int numSamples);
     void begin();
     float calibrateR0();
     float readPPM();
