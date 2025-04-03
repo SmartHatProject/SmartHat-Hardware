@@ -3,7 +3,6 @@
 #include "DustSensor.h"
 #include "GasSensor.h"
 #include <ArduinoJson.h>
-#include <Math.h>
 #include "Message.h"
 
 #define DUST_ALERT_THRESHOLD 50.0
