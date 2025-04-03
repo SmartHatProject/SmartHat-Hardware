@@ -1,6 +1,4 @@
 #include "MQ135Sensor.h"
-#include <Arduino.h>
-#include <math.h>
 
 MQ135Sensor::MQ135Sensor(int pin, float loadResistance, int numSamples)
     : _pin(pin), _rl(loadResistance), _numSamples(numSamples), _r0(0.0) {}
