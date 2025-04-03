@@ -2,6 +2,7 @@
 
 const std::string Message::DUST_DATA_MESSAGE = "DUST_SENSOR_DATA";
 const std::string Message::SOUND_DATA_MESSAGE = "SOUND_SENSOR_DATA";
+const std::string Message::GAS_DATA_MESSAGE = "GAS_SENSOR_DATA";
 
 Message::Message()
         : messageType("UNKNOWN"), data(0.0f), timeStamp(millis()) {}
@@ -27,11 +28,11 @@ std:: string Message::getJsonMessage() {
     if (messageType.empty()) {
         Serial.println("ERROR: Invalid messageType in Message");
         jsonCreationSuccess = false;
-    } else if (messageType != DUST_DATA_MESSAGE && messageType != SOUND_DATA_MESSAGE) {
+    } else if (messageType != DUST_DATA_MESSAGE && messageType != SOUND_DATA_MESSAGE && messageType != GAS_DATA_MESSAGE) {
         // Verify messageType matches one of the expected constants
         Serial.print("ERROR: Unknown messageType: ");
         Serial.println(messageType.c_str());
-        Serial.println("Expected DUST_SENSOR_DATA or SOUND_SENSOR_DATA");
+        Serial.println("Expected DUST_SENSOR_DATA or SOUND_SENSOR_DATA or GAS_SENSOR_DATA");
         jsonCreationSuccess = false;
     } else {
         jsonDoc["messageType"] = this->messageType;
@@ -57,7 +58,12 @@ std:: string Message::getJsonMessage() {
                 Serial.println(data);
                 // Still include the value but log a warning
             }
-        }
+        } else if (messageType == GAS_DATA_MESSAGE) {
+            // CO2 gas levels typically range from 0 to 1000 ppm
+            if (data < 0.0f || data > 1000.0f) {
+                Serial.print("WARNING: Gas value out of typical range: ");
+                Serial.println(data);
+                // Still include the value but log a warning
         
         jsonDoc["data"] = this->data;
     }
@@ -127,7 +133,7 @@ std::string Message::createFallbackJson() {
     StaticJsonDocument<200> fallbackDoc;
     
     // Use the message type if valid, or a default if not
-    const std::string msgType = (messageType == DUST_DATA_MESSAGE || messageType == SOUND_DATA_MESSAGE) 
+    const std::string msgType = (messageType == DUST_DATA_MESSAGE || messageType == SOUND_DATA_MESSAGE || messageType == GAS_DATA_MESSAGE) 
                          ? messageType 
                          : SOUND_DATA_MESSAGE;
     
