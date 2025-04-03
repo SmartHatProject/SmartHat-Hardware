@@ -1,4 +1,5 @@
 #include "GasSensor.h"
+#include <Math.h>
 
 GasSensor::GasSensor(int pin, float loadResistance, int numSamples)
     : _pin(pin), _rl(loadResistance), _numSamples(numSamples), _r0(0.0) {}
