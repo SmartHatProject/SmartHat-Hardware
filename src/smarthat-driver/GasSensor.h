@@ -1,5 +1,5 @@
-#ifndef MQ135SENSOR_H
-#define MQ135SENSOR_H
+#ifndef GASSENSOR_H
+#define GASSENSOR_H
 
 class MQ135Sensor {
 public:
