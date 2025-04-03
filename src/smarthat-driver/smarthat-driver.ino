@@ -7,7 +7,7 @@
 
 #define DUST_ALERT_THRESHOLD 50.0
 #define SOUND_ALERT_THRESHOLD 85.0
-#define SOUND_ALERT_THRESHOLD 1000.0
+#define GAS_ALERT_THRESHOLD 1000.0
 
 //dust sensor constants
 #define DUST_SENSOR_PIN 35
@@ -20,6 +20,12 @@
 #define NOISE_CALIBRATION_DB 57.0
 #define NOISE_PEAK_REF 373
 #define NOISE_AVG_REF 363
+
+//gas sensor constants
+#define GAS_SENSOR_PIN 32
+#define DUST_LED_PIN 23
+#define DUST_ADC_MAX 4095
+#define DUST_VCC 3.3
 
 
 bool lastConnectionStatus = false;
@@ -85,6 +91,10 @@ void loop() {
         // update value of sound characteristic with new sensor reading
         noiseSensor.update();
         bleHandler.updateSoundLevel(noiseSensor.getPeakDB());
+
+        // update value of gas characteristic with new sensor reading
+        float gasSensorReading = gasSensor.readGasSensor();
+        bleHandler.updateGasLevel(gasSensorReading);
       }
     
     }
