@@ -5,6 +5,7 @@
 #define SERVICE_UUID "12345678-1234-5678-1234-56789abcdef0"
 #define SOUND_CHARACTERISTIC_UUID "abcd1234-5678-1234-5678-abcdef123456"
 #define DUST_CHARACTERISTIC_UUID  "dcba4321-8765-4321-8765-654321fedcba"
+#define GAS_CHARACTERISTIC_UUID  "b6fc48af-6b61-4f96-afdf-a359a8b2b1b1"
 
 
 #define MAX_MTU_SIZE 512 
@@ -73,6 +74,7 @@ BleHandler::BleHandler() {
     pService = nullptr;
     pSoundCharacteristic = nullptr;
     pDustCharacteristic = nullptr;
+    pGasCharacteristic = nullptr;
 }
 
 void BleHandler::setUpBle() {
@@ -119,6 +121,18 @@ void BleHandler::setUpBle() {
         return;
     }
 
+     // Gas Characteristic (Read Only)
+    pGasCharacteristic = pService->createCharacteristic(
+        GAS_CHARACTERISTIC_UUID,
+        BLECharacteristic::PROPERTY_READ| BLECharacteristic::PROPERTY_NOTIFY
+    );
+
+    // Check if gas characteristic creation was successful
+    if (pGasCharacteristic == nullptr) {
+        Serial.println("ERROR: Failed to create gas characteristic");
+        return;
+    }
+
 
     // make initial values of chracteristics Message objects as well using Message class
     Message initialSoundMessage = Message(Message::SOUND_DATA_MESSAGE, -1.1f);  //negative initial value to know its initial
@@ -128,6 +142,10 @@ void BleHandler::setUpBle() {
     Message initialDustMessage = Message(Message::DUST_DATA_MESSAGE, -1.1f);
     std::string jsonDustMessage = initialDustMessage.getJsonMessage();
     pDustCharacteristic->setValue(jsonDustMessage.c_str());
+
+    Message initialGasMessage = Message(Message::GAS_DATA_MESSAGE, -1.1f);
+    std::string jsonGasMessage = initialGasMessage.getJsonMessage();
+    pGasCharacteristic->setValue(jsonGasMessage.c_str());
 
     // Set initial values 
     if (jsonSoundMessage.length() > 0) {
@@ -150,6 +168,16 @@ void BleHandler::setUpBle() {
         Serial.println("Set fallback dust characteristic value");
     }
 
+     if (jsonGasMessage.length() > 0) {
+        pGasCharacteristic->setValue(jsonGasMessage.c_str());
+        Serial.println("Set initial gas characteristic value");
+    } else {
+        // Fallback if JSON creation fails
+        const char* fallbackJson = "{\"messageType\":\"GAS_SENSOR_DATA\",\"data\":-1.1,\"timeStamp\":0}";
+        pDustCharacteristic->setValue(fallbackJson);
+        Serial.println("Set fallback gas characteristic value");
+    }
+  
     // sound sensor
     BLE2902* soundDescriptor = new BLE2902();
     if (soundDescriptor == nullptr) {
@@ -194,10 +222,35 @@ void BleHandler::setUpBle() {
         delete dustDescriptor; // Prevent memory leak
         return;
     }
+
+      // gas sensor
+    BLE2902* gasDescriptor = new BLE2902();
+    if (gasDescriptor == nullptr) {
+        Serial.println("ERROR: Failed to create gas descriptor");
+        return;
+    }
+    
+    //Necessary for app to pick up notifications
+    gasDescriptor->setNotifications(true);
+    bool gasDescriptorAdded = true;
+    try {
+        pgasCharacteristic->addDescriptor(gasDescriptor);
+    } catch (...) {
+        gasDescriptorAdded = false;
+        Serial.println("ERROR: Exception while adding gas descriptor");
+    }
+    
+    if (!gasDescriptorAdded) {
+        Serial.println("ERROR: Failed to add gas descriptor");
+        delete gasDescriptor; // Prevent memory leak
+        return;
+    }
     
     // Set callbacks 
     pSoundCharacteristic->setCallbacks(new CharacteristicCallbacks());
-    pDustCharacteristic->setCallbacks(new CharacteristicCallbacks());    
+    pDustCharacteristic->setCallbacks(new CharacteristicCallbacks()); 
+    pGasCharacteristic->setCallbacks(new CharacteristicCallbacks());    
+
 
 
     pService->start();
@@ -220,6 +273,7 @@ void BleHandler::setUpBle() {
     Serial.println("Service UUID: " + String(SERVICE_UUID));
     Serial.println("Sound Characteristic UUID: " + String(SOUND_CHARACTERISTIC_UUID));
     Serial.println("Dust Characteristic UUID: " + String(DUST_CHARACTERISTIC_UUID));
+    Serial.println("Gas Characteristic UUID: " + String(GAS_CHARACTERISTIC_UUID));
     Serial.println("Waiting for connections...");
 }
 
@@ -259,6 +313,24 @@ void BleHandler::updateDustLevel(float dustLevel) {
     }
 }
 
+// Method to update gas level (using a float value)
+void BleHandler::updateGasLevel(float gasLevel) {
+
+    if(deviceConnected){
+      //create message from gas sensor and format in JSON
+      Message gasMessage = Message(Message::GAS_DATA_MESSAGE, gasLevel);
+      std::string jsonMessage = gasMessage.getJsonMessage();
+
+      //set the value of gas characteristic to JSON string so that android app can process
+      pGasCharacteristic->setValue(jsonMessage.c_str());
+      pGasCharacteristic->notify();
+
+      //print for debug
+      Serial.println("\nvalue of gas sensor characteristic sent to app: ");
+      Serial.println(jsonMessage.c_str());  
+    }
+}
+
 // Getter for the BLEServer
 BLEServer* BleHandler::getServer() {
     return pServer;
@@ -277,6 +349,11 @@ BLECharacteristic* BleHandler::getSoundCharacteristic() {
 // Getter for the Dust Characteristic
 BLECharacteristic* BleHandler::getDustCharacteristic() {
     return pDustCharacteristic;
+}
+
+// Getter for the Gas Characteristic
+BLECharacteristic* BleHandler::getGasCharacteristic() {
+    return pGasCharacteristic;
 }
 
 // Setter for the BLEServer
@@ -299,7 +376,15 @@ void BleHandler::setDustCharacteristic(BLECharacteristic* dustCharacteristic) {
     pDustCharacteristic = dustCharacteristic;
 }
 
+// Setter for the Gas Characteristic
+void BleHandler::setGasCharacteristic(BLECharacteristic* gasCharacteristic) {
+    pGasCharacteristic = gasCharacteristic;
+}
+
+
 bool BleHandler::isDeviceConnected() {
     return deviceConnected;
 }
+
+
 
