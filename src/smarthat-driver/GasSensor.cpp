@@ -14,6 +14,10 @@ void GasSensor::begin() {
     Serial.println(_r0);
 }
 
+void GasSensor::update() {
+    readPPM();  // This is the logic that runs on each update
+}
+
 float GasSensor::calibrateR0() {
     float analogAvg = getAverageAnalog();
     float rs = calculateRs(analogAvg);

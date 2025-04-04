@@ -58,6 +58,5 @@ class BleHandler {
     void setDustCharacteristic(BLECharacteristic* dustCharacteristic);
     void setGasCharacteristic(BLECharacteristic* gasCharacteristic);
 };
-};
 
 #endif

@@ -7,6 +7,7 @@ class GasSensor {
 public:
     GasSensor(int pin, float loadResistance, int numSamples);
     void begin();
+    void update();
     float calibrateR0();
     float readPPM();
 

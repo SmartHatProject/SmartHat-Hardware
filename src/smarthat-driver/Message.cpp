@@ -64,8 +64,10 @@ std:: string Message::getJsonMessage() {
                 Serial.print("WARNING: Gas value out of typical range: ");
                 Serial.println(data);
                 // Still include the value but log a warning
+            }
+        }
+            jsonDoc["data"] = this->data;
         
-        jsonDoc["data"] = this->data;
     }
     
     // Add timestamp

@@ -234,7 +234,7 @@ void BleHandler::setUpBle() {
     gasDescriptor->setNotifications(true);
     bool gasDescriptorAdded = true;
     try {
-        pgasCharacteristic->addDescriptor(gasDescriptor);
+        pGasCharacteristic->addDescriptor(gasDescriptor);
     } catch (...) {
         gasDescriptorAdded = false;
         Serial.println("ERROR: Exception while adding gas descriptor");

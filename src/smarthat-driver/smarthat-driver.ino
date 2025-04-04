@@ -98,8 +98,8 @@ void loop() {
         bleHandler.updateSoundLevel(noiseSensor.getPeakDB());
 
         // update value of gas characteristic with new sensor reading
-        float gasSensorReading = gasSensor.readGasSensor();
-        bleHandler.updateGasLevel(gasSensorReading);
+        gasSensor.update();
+        bleHandler.updateGasLevel(gasSensor.readPPM());
       }
     
     }
