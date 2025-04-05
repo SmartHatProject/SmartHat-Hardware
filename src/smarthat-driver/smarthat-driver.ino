@@ -53,7 +53,7 @@ void setup() {
     //Init noise sensor
     noiseSensor.begin();
 
-    //Init noise sensor
+    //Init gas sensor
     gasSensor.begin();
 
     //init dust sensir
