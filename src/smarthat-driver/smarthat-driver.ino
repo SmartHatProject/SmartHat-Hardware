@@ -28,23 +28,27 @@ const unsigned long UPDATE_INTERVAL = 1000;
 BleHandler bleHandler;
 
 //NoiseSensor noiseSensor(sensorPin, loudnessThreshold, numSamples);
-NoiseSensor noiseSensor(NOISE_SENSOR_PIN, NOISE_CALIBRATION_DB, NOISE_PEAK_REF, NOISE_AVG_REF);
+// NoiseSensor noiseSensor(NOISE_SENSOR_PIN, NOISE_CALIBRATION_DB, NOISE_PEAK_REF, NOISE_AVG_REF);
 
 //DustSensor dustSensor(SENSOR_PIN, LED_PIN, ADC_MAX, VCC)
-DustSensor dustSensor(DUST_SENSOR_PIN, DUST_LED_PIN, DUST_ADC_MAX, DUST_VCC);
+// DustSensor dustSensor(DUST_SENSOR_PIN, DUST_LED_PIN, DUST_ADC_MAX, DUST_VCC);
 
 void setup() {
     Serial.begin(115200);
+    delay(1000);
+    Serial.println("\nSerial set up");
     Serial.println("\n========== SmartHat Starting Up ==========");
 
     // SerialBT.begin("SmartHat");
+    Serial.println("\nabout to call bleHandler.setUpBle()");
     bleHandler.setUpBle();
+    Serial.println("\nSuccessfully called setUpBle");
     
     //Init noise sensor
-    noiseSensor.begin();
+    // noiseSensor.begin();
 
     //init dust sensir
-    dustSensor.setUpDustSensor();
+    // dustSensor.setUpDustSensor();
 
     analogReadResolution(12); // Set the resolution to 12 bits (0-4095)
 
@@ -77,12 +81,14 @@ void loop() {
       if(currentConnectionStatus){  
 
         // update value of dust characteristic with new sensor reading
-        float dustSensorReading = dustSensor.readDustSensor();
-        bleHandler.updateDustLevel(dustSensorReading);
+        // float dustSensorReading = dustSensor.readDustSensor();
+        // bleHandler.updateDustLevel(dustSensorReading);
+        bleHandler.updateDustLevel(99.99);
     
         // update value of sound characteristic with new sensor reading
-        noiseSensor.update();
-        bleHandler.updateSoundLevel(noiseSensor.getPeakDB());
+        // noiseSensor.update();
+        // bleHandler.updateSoundLevel(noiseSensor.getPeakDB());
+        bleHandler.updateSoundLevel(99.99);
       }
     
     }
