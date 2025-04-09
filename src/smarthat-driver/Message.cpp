@@ -26,13 +26,13 @@ std:: string Message::getJsonMessage() {
     
     // Check for valid messageType
     if (messageType.empty()) {
-        Serial.println("ERROR: Invalid messageType in Message");
+        // Serial.println("ERROR: Invalid messageType in Message");
         jsonCreationSuccess = false;
     } else if (messageType != DUST_DATA_MESSAGE && messageType != SOUND_DATA_MESSAGE && messageType != GAS_DATA_MESSAGE) {
         // Verify messageType matches one of the expected constants
-        Serial.print("ERROR: Unknown messageType: ");
-        Serial.println(messageType.c_str());
-        Serial.println("Expected DUST_SENSOR_DATA or SOUND_SENSOR_DATA or GAS_SENSOR_DATA");
+        // Serial.print("ERROR: Unknown messageType: ");
+        // Serial.println(messageType.c_str());
+        // Serial.println("Expected DUST_SENSOR_DATA or SOUND_SENSOR_DATA or GAS_SENSOR_DATA");
         jsonCreationSuccess = false;
     } else {
         jsonDoc["messageType"] = this->messageType;
@@ -40,29 +40,29 @@ std:: string Message::getJsonMessage() {
     
     // Check data is within reasonable range
     if (isnan(data) || isinf(data)) {
-        Serial.println("ERROR: Invalid sensor data value (NaN or Inf)");
+        // Serial.println("ERROR: Invalid sensor data value (NaN or Inf)");
         jsonCreationSuccess = false;
     } else {
         // Additional range checks for specific message types
         if (messageType == DUST_DATA_MESSAGE) {
             // Dust sensors typically range from 0 to 1000 μg/m³
             if (data < 0.0f || data > 1000.0f) {
-                Serial.print("WARNING: Dust value out of typical range: ");
-                Serial.println(data);
+                // Serial.print("WARNING: Dust value out of typical range: ");
+                // Serial.println(data);
                 // Still include the value but log a warning
             }
         } else if (messageType == SOUND_DATA_MESSAGE) {
             // Sound levels typically range from 30 to 130 dB
             if (data < 30.0f || data > 130.0f) {
-                Serial.print("WARNING: Sound value out of typical range: ");
-                Serial.println(data);
+                // Serial.print("WARNING: Sound value out of typical range: ");
+                // Serial.println(data);
                 // Still include the value but log a warning
             }
         } else if (messageType == GAS_DATA_MESSAGE) {
             // CO2 gas levels typically range from 0 to 1000 ppm
             if (data < 0.0f || data > 5000.0f) {
-                Serial.print("WARNING: Gas value out of typical range: ");
-                Serial.println(data);
+                // Serial.print("WARNING: Gas value out of typical range: ");
+                // Serial.println(data);
                 // Still include the value but log a warning
             }
         }
@@ -75,7 +75,7 @@ std:: string Message::getJsonMessage() {
     if (currentTimestamp == 0) {
         // If timestamp wasn't set properly, use current time
         currentTimestamp = millis();
-        Serial.println("WARNING: Using current time as timestamp was zero");
+        // Serial.println("WARNING: Using current time as timestamp was zero");
     }
     jsonDoc["timeStamp"] = currentTimestamp;
     
@@ -85,8 +85,8 @@ std:: string Message::getJsonMessage() {
         // Validate document size before serializing
         size_t jsonSize = measureJson(jsonDoc);
         if (jsonSize > 200) {
-            Serial.print("ERROR: JSON document too large: ");
-            Serial.println(jsonSize);
+            // Serial.print("ERROR: JSON document too large: ");
+            // Serial.println(jsonSize);
             return createFallbackJson();
         }
         
@@ -95,7 +95,7 @@ std:: string Message::getJsonMessage() {
         
         // Validation check
         if (jsonString.length() == 0 || jsonString == "null" || jsonString == "{}") {
-            Serial.println("ERROR: JSON serialization failed");
+            // Serial.println("ERROR: JSON serialization failed");
             return createFallbackJson();
         }
         
@@ -104,25 +104,25 @@ std:: string Message::getJsonMessage() {
         if (jsonString.find("messageType") == std::string::npos ||
             jsonString.find("data") == std::string::npos ||
             jsonString.find("timeStamp") == std::string::npos) {
-            Serial.println("ERROR: JSON missing required fields");
-            Serial.println(jsonString.c_str());
+            // Serial.println("ERROR: JSON missing required fields");
+            // Serial.println(jsonString.c_str());
             return createFallbackJson();
         }
         
         // Log the successful JSON creation
-        Serial.println("JSON created successfully:");
-        Serial.print("  Message Type: ");
-        Serial.println(this->messageType.c_str());
-        Serial.print("  Data Value: ");
-        Serial.println(this->data);
-        Serial.print("  Timestamp: ");
-        Serial.println(currentTimestamp);
-        Serial.print("  JSON Size: ");
-        Serial.print(jsonSize);
-        Serial.print(" bytes, String Length: ");
-        Serial.println(jsonString.length());
+        // Serial.println("JSON created successfully:");
+        // Serial.print("  Message Type: ");
+        // Serial.println(this->messageType.c_str());
+        // Serial.print("  Data Value: ");
+        // Serial.println(this->data);
+        // Serial.print("  Timestamp: ");
+        // Serial.println(currentTimestamp);
+        // Serial.print("  JSON Size: ");
+        // Serial.print(jsonSize);
+        // Serial.print(" bytes, String Length: ");
+        // Serial.println(jsonString.length());
     } else {
-        Serial.println("ERROR: Failed to create JSON message due to validation errors");
+        // Serial.println("ERROR: Failed to create JSON message due to validation errors");
         return createFallbackJson();
     }
     
@@ -155,6 +155,6 @@ std::string Message::createFallbackJson() {
     std::string fallbackJson = "";
     serializeJson(fallbackDoc, fallbackJson);
     
-    Serial.println(("Using fallback JSON due to validation failure: " + fallbackJson).c_str());
+    // Serial.println(("Using fallback JSON due to validation failure: " + fallbackJson).c_str());
     return fallbackJson;
 }

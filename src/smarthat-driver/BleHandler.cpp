@@ -15,18 +15,18 @@
 class CharacteristicCallbacks: public BLECharacteristicCallbacks {
     void onRead(BLECharacteristic* pCharacteristic) {
         String uuid = pCharacteristic->getUUID().toString().c_str();
-        Serial.println("Characteristic read: " + uuid);
+        // Serial.println("Characteristic read: " + uuid);
     }
     
     void onWrite(BLECharacteristic* pCharacteristic) {
         String uuid = pCharacteristic->getUUID().toString().c_str();
-        Serial.println("Characteristic write: " + uuid);
-        Serial.println("Value: " + String(pCharacteristic->getValue().c_str()));
+        // Serial.println("Characteristic write: " + uuid);
+        // Serial.println("Value: " + String(pCharacteristic->getValue().c_str()));
     }
     
     void onNotify(BLECharacteristic* pCharacteristic) {
         String uuid = pCharacteristic->getUUID().toString().c_str();
-        Serial.println("Notification sent: " + uuid);
+        // Serial.println("Notification sent: " + uuid);
     }
 };
 
@@ -46,15 +46,15 @@ void ServerCallbacks::onConnect(BLEServer* pServer) {
     
     // request larger mtu size for efficient data transfer
     uint16_t mtu = pServer->getPeerMTU(pServer->getConnId());
-    Serial.print("Default MTU: "); 
-    Serial.println(mtu);
+    // Serial.print("Default MTU: "); 
+    // Serial.println(mtu);
     
     // updatePeerMTU returns void  can't check if it succeeded
     pServer->updatePeerMTU(pServer->getConnId(), MAX_MTU_SIZE);
-    Serial.print("Requested larger MTU: ");
-    Serial.println(MAX_MTU_SIZE);
+    // Serial.print("Requested larger MTU: ");
+    // Serial.println(MAX_MTU_SIZE);
     
-    Serial.println("Waiting for client to enable notifications...");
+    // Serial.println("Waiting for client to enable notifications...");
 }
 
 void ServerCallbacks::onDisconnect(BLEServer* pServer) {
@@ -78,14 +78,14 @@ BleHandler::BleHandler() {
 }
 
 void BleHandler::setUpBle() {
-    Serial.println("\nStarting BLE work!");
+    // Serial.println("\nStarting BLE work!");
 
     // Initialize the BLE device
     BLEDevice::init("SmartHat");
 
     pServer = BLEDevice::createServer();
     if (pServer == nullptr) {
-        Serial.println("ERROR: Failed to create BLE server");
+        // Serial.println("ERROR: Failed to create BLE server");
         return;
     }
 
@@ -93,7 +93,7 @@ void BleHandler::setUpBle() {
 
     pService = pServer->createService(SERVICE_UUID);
     if (pService == nullptr) {
-        Serial.println("ERROR: Failed to create BLE service");
+        // Serial.println("ERROR: Failed to create BLE service");
         return;
     }
 
@@ -150,32 +150,32 @@ void BleHandler::setUpBle() {
     // Set initial values 
     if (jsonSoundMessage.length() > 0) {
         pSoundCharacteristic->setValue(jsonSoundMessage.c_str());
-        Serial.println("Set initial sound characteristic value");
+        // Serial.println("Set initial sound characteristic value");
     } else {
         // Fallback if JSON creation fails
         const char* fallbackJson = "{\"messageType\":\"SOUND_SENSOR_DATA\",\"data\":-1.1,\"timeStamp\":0}";
         pSoundCharacteristic->setValue(fallbackJson);
-        Serial.println("Set fallback sound characteristic value");
+        // Serial.println("Set fallback sound characteristic value");
     }
     
     if (jsonDustMessage.length() > 0) {
         pDustCharacteristic->setValue(jsonDustMessage.c_str());
-        Serial.println("Set initial dust characteristic value");
+        // Serial.println("Set initial dust characteristic value");
     } else {
         // Fallback if JSON creation fails
         const char* fallbackJson = "{\"messageType\":\"DUST_SENSOR_DATA\",\"data\":-1.1,\"timeStamp\":0}";
         pDustCharacteristic->setValue(fallbackJson);
-        Serial.println("Set fallback dust characteristic value");
+        // Serial.println("Set fallback dust characteristic value");
     }
 
      if (jsonGasMessage.length() > 0) {
         pGasCharacteristic->setValue(jsonGasMessage.c_str());
-        Serial.println("Set initial gas characteristic value");
+        // Serial.println("Set initial gas characteristic value");
     } else {
         // Fallback if JSON creation fails
         const char* fallbackJson = "{\"messageType\":\"GAS_SENSOR_DATA\",\"data\":-1.1,\"timeStamp\":0}";
         pDustCharacteristic->setValue(fallbackJson);
-        Serial.println("Set fallback gas characteristic value");
+        // Serial.println("Set fallback gas characteristic value");
     }
   
     // sound sensor
@@ -268,13 +268,13 @@ void BleHandler::setUpBle() {
 
     BLEDevice::startAdvertising();
 
-    Serial.println("\n=== BLE Setup Complete ===");
-    Serial.println("Device Name: SmartHat");
-    Serial.println("Service UUID: " + String(SERVICE_UUID));
-    Serial.println("Sound Characteristic UUID: " + String(SOUND_CHARACTERISTIC_UUID));
-    Serial.println("Dust Characteristic UUID: " + String(DUST_CHARACTERISTIC_UUID));
-    Serial.println("Gas Characteristic UUID: " + String(GAS_CHARACTERISTIC_UUID));
-    Serial.println("Waiting for connections...");
+    // Serial.println("\n=== BLE Setup Complete ===");
+    // Serial.println("Device Name: SmartHat");
+    // Serial.println("Service UUID: " + String(SERVICE_UUID));
+    // Serial.println("Sound Characteristic UUID: " + String(SOUND_CHARACTERISTIC_UUID));
+    // Serial.println("Dust Characteristic UUID: " + String(DUST_CHARACTERISTIC_UUID));
+    // Serial.println("Gas Characteristic UUID: " + String(GAS_CHARACTERISTIC_UUID));
+    // Serial.println("Waiting for connections...");
 }
 
 // Method to update sound level (using a float value)
@@ -290,8 +290,8 @@ void BleHandler::updateSoundLevel(float soundLevel) {
       pSoundCharacteristic->notify();
 
       //print for debug
-      Serial.println("\nvalue of sound sensor characteristic sent to app: ");
-      Serial.println(jsonMessage.c_str());  
+    //   Serial.println("\nvalue of sound sensor characteristic sent to app: ");
+    //   Serial.println(jsonMessage.c_str());  
     }
 }
 
@@ -308,8 +308,8 @@ void BleHandler::updateDustLevel(float dustLevel) {
       pDustCharacteristic->notify();
 
       //print for debugging purposes
-      Serial.println("\nvalue of dust sensor characteristic sent to app: ");
-      Serial.println(jsonMessage.c_str());
+    //   Serial.println("\nvalue of dust sensor characteristic sent to app: ");
+    //   Serial.println(jsonMessage.c_str());
     }
 }
 
@@ -326,8 +326,8 @@ void BleHandler::updateGasLevel(float gasLevel) {
       pGasCharacteristic->notify();
 
       //print for debug
-      Serial.println("\nvalue of gas sensor characteristic sent to app: ");
-      Serial.println(jsonMessage.c_str());  
+    //   Serial.println("\nvalue of gas sensor characteristic sent to app: ");
+    //   Serial.println(jsonMessage.c_str());  
     }
 }
 

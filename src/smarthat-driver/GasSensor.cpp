@@ -6,12 +6,12 @@ GasSensor::GasSensor(int pin, float loadResistance, int numSamples)
 
 void GasSensor::begin() {
     Serial.begin(115200);
-    Serial.println("MQ135 Sensor on ESP32 - Calibrating R0");
+    // Serial.println("MQ135 Sensor on ESP32 - Calibrating R0");
 
     delay(10000);  // Sensor warm-up
     _r0 = calibrateR0();
-    Serial.print("Calibrated R0 (in clean air): ");
-    Serial.println(_r0);
+    // Serial.print("Calibrated R0 (in clean air): ");
+    // Serial.println(_r0);
 }
 
 void GasSensor::update() {
@@ -29,12 +29,12 @@ float GasSensor::readPPM() {
     float rs = calculateRs(analogAvg);
     float ppm = getPPM(rs, _r0);
 
-    Serial.print("Analog Avg: ");
-    Serial.print(analogAvg);
-    Serial.print(" | Rs: ");
-    Serial.print(rs);
-    Serial.print(" kΩ | PPM: ");
-    Serial.println(ppm);
+    // Serial.print("Analog Avg: ");
+    // Serial.print(analogAvg);
+    // Serial.print(" | Rs: ");
+    // Serial.print(rs);
+    // Serial.print(" kΩ | PPM: ");
+    // Serial.println(ppm);
 
     return ppm;
 }
