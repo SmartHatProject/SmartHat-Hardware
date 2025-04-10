@@ -35,7 +35,7 @@ void NoiseSensor::update() {
 }
 
 float NoiseSensor::getPeakDB() {
-    return _dBSPLPeak;
+    return _dBSPLPeak-20;
 }
 
 float NoiseSensor::getAverageDB() {
