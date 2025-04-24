@@ -1,11 +1,13 @@
 #include "BleHandler.h"
 #include "NoiseSensor.h"
 #include "DustSensor.h"
+#include "GasSensor.h"
 #include <ArduinoJson.h>
 #include "Message.h"
 
 #define DUST_ALERT_THRESHOLD 50.0
 #define SOUND_ALERT_THRESHOLD 85.0
+#define GAS_ALERT_THRESHOLD 1000.0
 
 //dust sensor constants
 #define DUST_SENSOR_PIN 35
@@ -19,6 +21,11 @@
 #define NOISE_PEAK_REF 373
 #define NOISE_AVG_REF 363
 
+//gas sensor constants
+#define GAS_SENSOR_PIN 32
+#define GAS_LOAD_RESISTANCE 10.0
+#define GAS_NUM_SAMPLES 100
+
 
 bool lastConnectionStatus = false;
 unsigned long lastUpdateTime = 0;
@@ -29,6 +36,9 @@ BleHandler bleHandler;
 
 //NoiseSensor noiseSensor(sensorPin, loudnessThreshold, numSamples);
 NoiseSensor noiseSensor(NOISE_SENSOR_PIN, NOISE_CALIBRATION_DB, NOISE_PEAK_REF, NOISE_AVG_REF);
+
+//GasSensor gasSensor(sensorPin,load resistance, numSamples);
+GasSensor gasSensor(GAS_SENSOR_PIN, GAS_LOAD_RESISTANCE, GAS_NUM_SAMPLES);
 
 //DustSensor dustSensor(SENSOR_PIN, LED_PIN, ADC_MAX, VCC)
 DustSensor dustSensor(DUST_SENSOR_PIN, DUST_LED_PIN, DUST_ADC_MAX, DUST_VCC);
@@ -42,6 +52,9 @@ void setup() {
     
     //Init noise sensor
     noiseSensor.begin();
+
+    //Init gas sensor
+    gasSensor.begin();
 
     //init dust sensir
     dustSensor.setUpDustSensor();
@@ -83,6 +96,10 @@ void loop() {
         // update value of sound characteristic with new sensor reading
         noiseSensor.update();
         bleHandler.updateSoundLevel(noiseSensor.getPeakDB());
+
+        // update value of gas characteristic with new sensor reading
+        gasSensor.update();
+        bleHandler.updateGasLevel(gasSensor.readPPM());
       }
     
     }

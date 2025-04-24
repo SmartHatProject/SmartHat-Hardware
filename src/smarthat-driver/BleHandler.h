@@ -28,6 +28,7 @@ class BleHandler {
     BLEService *pService;
     BLECharacteristic *pSoundCharacteristic;
     BLECharacteristic *pDustCharacteristic;
+    BLECharacteristic *pGasCharacteristic;
     bool deviceConnected;
   
   public:
@@ -40,12 +41,14 @@ class BleHandler {
     // Methods to update sensor values
     void updateSoundLevel(float soundLevel);
     void updateDustLevel(float dustLevel);
+    void updateGasLevel(float gasLevel);
 
     // Getters
     BLEServer* getServer();
     BLEService* getService();
     BLECharacteristic* getSoundCharacteristic();
     BLECharacteristic* getDustCharacteristic();
+    BLECharacteristic* getGasCharacteristic();
     bool isDeviceConnected();
     
     // Setters
@@ -53,6 +56,7 @@ class BleHandler {
     void setService(BLEService* service);
     void setSoundCharacteristic(BLECharacteristic* soundCharacteristic);
     void setDustCharacteristic(BLECharacteristic* dustCharacteristic);
+    void setGasCharacteristic(BLECharacteristic* gasCharacteristic);
 };
 
 #endif
